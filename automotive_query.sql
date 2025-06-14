@@ -1,6 +1,14 @@
 use automotive_api;
 select * from cars;
 
+create table cars (
+	idCars int(10) primary key not null auto_increment,
+    nama_mobil varchar(100) not null,
+    idMerek_fk int(10),
+    idJenis_fk int(10),
+    horse_power int(10)
+);
+
 alter table cars
 drop column bio;
 
@@ -153,6 +161,7 @@ FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME IN ('cars', 'merek') 
 AND COLUMN_NAME IN ('idMerek_fk', 'idMerek');
 
+use automotive_api;
 -- Create a stored procedure to safely drop constraints
 DELIMITER //
 CREATE PROCEDURE safe_drop_fk(IN table_name VARCHAR(64), IN fk_name VARCHAR(64))
@@ -187,12 +196,12 @@ ALTER TABLE cars MODIFY idJenis_fk INT(10) UNSIGNED NULL;
 
 -- Recreate constraints
 ALTER TABLE cars ADD CONSTRAINT idMerek_fk
-FOREIGN KEY (idMerek_fk) REFERENCES merek(idMerek)
-ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY (idMerek_fk) REFERENCES merek(idMerek);
+/*ON DELETE SET NULL ON UPDATE CASCADE;*/
 
 ALTER TABLE cars ADD CONSTRAINT idJenis_fk
-FOREIGN KEY (idJenis_fk) REFERENCES jenis(idJenis)
-ON DELETE SET NULL ON UPDATE CASCADE;
+FOREIGN KEY (idJenis_fk) REFERENCES jenis(idJenis);
+/*ON DELETE SET NULL ON UPDATE CASCADE;*/
 
 -- Clean up
 DROP PROCEDURE IF EXISTS safe_drop_fk;
@@ -207,4 +216,5 @@ add constraint idJenis_fk
 foreign key (idJenis_fk) references jenis(idJenis)
 ON DELETE SET NULL ON UPDATE CASCADE;
 
-describe cars;
+use automotive_api;
+select * from cars;
