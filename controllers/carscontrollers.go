@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 func CreateCarsController(c echo.Context) error {
@@ -34,13 +33,20 @@ func CreateCarsController(c echo.Context) error {
 func GetCarsController(c echo.Context) error {
 	var cars []models.Cars
 
+	// Debug GORM Error output Mitigation
+	fmt.Println("GORM is using table:", configs.DB.NamingStrategy.TableName("Merek"))
+
+	/*result := configs.DB.
+	Preload("Merek", func(db *gorm.DB) *gorm.DB {
+		return db.Select("idMerek, merek") // Explicitly select columns
+	}).
+	Preload("Jenis", func(db *gorm.DB) *gorm.DB {
+		return db.Select("idJenis, jenis") // Explicitly select columns
+	}).
+	Find(&cars)*/
 	result := configs.DB.
-		Preload("Merek", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idMerek, merek") // Explicitly select columns
-		}).
-		Preload("Jenis", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idJenis, jenis") // Explicitly select columns
-		}).
+		Preload("Merek").
+		Preload("Jenis").
 		Find(&cars)
 
 	if result.Error != nil {

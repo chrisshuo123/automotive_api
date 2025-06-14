@@ -117,6 +117,8 @@ insert cars(nama_mobil, idMerek_fk, idJenis_fk, horse_power)
     select * from cars;
     describe cars;
     
+    drop table mereks;
+    
 /* Integrate the Table outputs */
 select
 	c.idCars,
@@ -188,11 +190,24 @@ CALL safe_drop_fk('cars', 'idMerek_fk');
 CALL safe_drop_fk('cars', 'idJenis_fk');
 
 -- Then proceed with your modifications
-ALTER TABLE merek MODIFY idMerek INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE cars MODIFY idMerek_fk INT(10) UNSIGNED NULL;
+ALTER TABLE merek
+MODIFY idMerek INT(10) NOT NULL AUTO_INCREMENT;
+ALTER TABLE cars
+MODIFY idMerek_fk INT(10);
 
-ALTER TABLE jenis MODIFY idJenis INT(10) UNSIGNED NOT NULL AUTO_INCREMENT;
-ALTER TABLE cars MODIFY idJenis_fk INT(10) UNSIGNED NULL;
+ALTER TABLE jenis
+MODIFY idJenis INT(10) NOT NULL AUTO_INCREMENT;
+ALTER TABLE cars
+MODIFY idJenis_fk INT(10);
+
+-- Table Cars recently unaccidentally modified with wrong Formats
+describe cars;
+select * from cars;
+
+alter table cars
+modify column nama_mobil varchar(100);
+alter table cars
+modify column horse_power int(10);
 
 -- Recreate constraints
 ALTER TABLE cars ADD CONSTRAINT idMerek_fk
