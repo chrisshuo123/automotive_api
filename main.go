@@ -2,7 +2,9 @@ package main
 
 import (
 	"automotiveApi/configs"
+	"automotiveApi/models"
 	"automotiveApi/routes"
+	"fmt"
 	"log"
 
 	"github.com/labstack/echo/v4"
@@ -11,9 +13,14 @@ import (
 func main() {
 	// Initialize Database
 	db := configs.InitDatabase()
+	fmt.Println("Database connection details:", configs.DB.Dialector.Name())
 
 	// Optional: Auto-migrate models (if needed)
 	configs.InitMigration(db)
+
+	if err := db.Migrator().DropTable(&models.Cars{}); err == nil {
+		db.AutoMigrate(&models.Cars{})
+	}
 
 	// Fix FKs without dropping tables
 	if err := configs.FixForeignKeys(db); err != nil {

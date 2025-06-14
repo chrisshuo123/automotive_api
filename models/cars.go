@@ -8,8 +8,8 @@ type Cars struct {
 	HorsePower uint   `gorm:"column:horse_power" json:"horse_power" form:"horse_power"`
 
 	// Relationships
-	Merek *Merek `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
-	Jenis *Jenis `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"jenis"`
+	Merek *Merek `gorm:"foreignKey:MerekID;references:idMerek" json:"merek"`
+	Jenis *Jenis `gorm:"foreignKey:JenisID;references:idJenis" json:"jenis"`
 }
 
 type Merek struct {
