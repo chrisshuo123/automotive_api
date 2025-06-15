@@ -26,16 +26,8 @@ func main() {
 
 	// Create Echo instance
 	e := echo.New()
-
-	// Register routes (example)
-	/*e.GET("/", func(c echo.Context) error {
-		return c.String(200, "Hello World!")
-	})*/
-
 	// Register Routes
 	routes.InitRoute(e)
-
-	//configs.DB.InitRoute()
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8000"))

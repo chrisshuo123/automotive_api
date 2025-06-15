@@ -33,17 +33,13 @@ func CreateCarsController(c echo.Context) error {
 func GetCarsController(c echo.Context) error {
 	var cars []models.Cars
 
+	// Set Response Header
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().Header().Set(echo.HeaderAccessControlAllowOrigin, "*")
+
 	// Debug GORM Error output Mitigation
 	fmt.Println("GORM is using table:", configs.DB.NamingStrategy.TableName("Merek"))
 
-	/*result := configs.DB.
-	Preload("Merek", func(db *gorm.DB) *gorm.DB {
-		return db.Select("idMerek, merek") // Explicitly select columns
-	}).
-	Preload("Jenis", func(db *gorm.DB) *gorm.DB {
-		return db.Select("idJenis, jenis") // Explicitly select columns
-	}).
-	Find(&cars)*/
 	result := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
