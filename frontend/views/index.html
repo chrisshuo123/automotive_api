@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <title>Car Inventory</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Car Inventory</h1>
+        <div class="car-list" id="carList">
+            <!-- Cars will be loaded here by JavaScript -->
+            <div class="loading">Loading cars...</div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch Cars from API
+        fetch('/api/cars')
+            .then(response => response.json())
+            .then(cars => {
+                const carList = document.getElementById("carList");
+
+                if(cars.length === 0) {
+                    carList.innerHTML = '<div class="no-cars">No cars found in inventory.</div>'
+                    
+                    return;
+                }
+
+                carList.innerHTML = ''; // Clear Loading message
+                
+                cars.forEach(car => {
+                    const carCard = document.createElement('div');
+                    carCard.className = 'car-card';
+                    carCard.innerHTML = `
+                        <h2>${car.nama_mobil}</h2>
+                        <div class="car-details">
+                            <p><b>Brand: </b>${car.merek.merek}</p>
+                            <p><b>Jenis: </b>${car.jenis.jenis}</p>
+                            <p><b>Horse Power: </b>${car.horse_power} CC</p>
+                        </div>
+                    `;
+                    carList.appendChild(carCard);
+                });
+            })
+            .catch(error => {
+                document.getElementById('carList').innerHTML = 
+                    `<div class="error">Error Loading Cars: ${error.message}</div>`;
+            });
+    </script>
+</body>
+</html>
