@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="../public/css/style_addCar.css">
+    <title>Add Car</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Add new car</h1>
+        <form id="carForm">
+            <div class="form-group">
+                <label for="merek">Brand: </label>
+                <select id="merek" name="idMerek_fk" required>
+                    <option value="">Select a brand</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="jenis">Type: </label>
+                <select id="jenis" name="idJenis_fk" required>
+                    <option value="">Select a type</option>
+                    <!-- Options will be populated by Javascript -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="horse_power">Horse Power: </label>
+                <input type="number" id="horse_power" name="horse_power" required>
+            </div>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <div id="message"></div>
+
+        <h2>Car List</h2>
+        <div id="carList"></div>
+    </div>
+
+    <script src="../public/js/script.js"></script>
+</body>
+</html>
