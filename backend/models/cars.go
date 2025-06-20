@@ -3,13 +3,13 @@ package models
 type Cars struct {
 	CarsID     uint   `gorm:"primaryKey;column:idCars" json:"idCars" form:"idCars"`
 	NamaMobil  string `gorm:"not null;column:nama_mobil" json:"nama_mobil" form:"nama_mobil"`
-	MerekID    *uint  `gorm:"column:idMerek_fk" json:"merek" form:"merek"`
-	JenisID    *uint  `gorm:"column:idJenis_fk" json:"jenis" form:"jenis"`
+	MerekID    *uint  `gorm:"column:idMerek_fk" json:"idMerek_fk" form:"idMerek_fk"`
+	JenisID    *uint  `gorm:"column:idJenis_fk" json:"idJenis_fk" form:"idJenis_fk"`
 	HorsePower uint   `gorm:"column:horse_power" json:"horse_power" form:"horse_power"`
 
 	// Relationships
-	Merek *Merek `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"-"`
-	Jenis *Jenis `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"-"`
+	Merek *Merek `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
+	Jenis *Jenis `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"jenis"`
 }
 
 type Merek struct {
