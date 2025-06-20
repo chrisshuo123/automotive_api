@@ -221,8 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const formData = {  // changed idMerek_fk to merek, and idJenis_fk to jenis
             nama_mobil: document.getElementById('nama_mobil').value,
-            merek: parseInt(document.getElementById('merek').value), // Ensure number
-            jenis: parseInt(document.getElementById('jenis').value), // Ensure number
+            idMerek_fk: parseInt(document.getElementById('merek').value), // Match Go struct
+            idJenis_fk: parseInt(document.getElementById('jenis').value), // Match Go struct
             horse_power: parseInt(document.getElementById('horse_power').value) || 0 // Force number
         };
 
