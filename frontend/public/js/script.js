@@ -1,97 +1,281 @@
+// Global configuration (only what's needed)
+const API_BASE = 'http://localhost:8000';
+const DEFAULT_HEADERS = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+};
+
+console.log("Before DOMContentLoaded"); // Debug 1
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Fetch Brand and Types when page loads
+    console.log("DOM fully loaded!"); // Debug 2
     fetchBrands();
     fetchTypes();
     fetchCars();
+    
+    // Your form submit handler...
+    /*const fetchOptions = {
+        credentials: 'include',  // This 'credentials' only makes the CORS more stricter, hard to serve DB to frontend.
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    };*/
 
-    document.getElementsByID('carForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = {
-            nama_mobil: document.getElementById('nama_mobil').value,
-            idMerek_fk: document.getElementById('merek').value,
-            idJenis_fk: document.getElementById('jenis').value,
-            horse_power: document.getElementById('horse_power').value
-        };
-
-        fetch('/api/cars', {
-            method:'POST',
-            headers: {
-                'content-type': 'application/JSON',
-            },
-            body: JSON.stringify(formData)
+    // Update fetchCars() to handle data.data
+    function fetchCars() {
+        fetch(`${API_BASE}/api/cars?_expand=merek&_expand=jenis`, { // Include related data
+            headers: DEFAULT_HEADERS // No Credentials
         })
-        .then(response => response.json())
-        .then(data => {
-            showMessage('Car Added Successfully!', success);
-            document.getElementById('carForm').reset();
-            fetchCars(); // Refresh the car list
-        })
-        .catch(error => {
-            showMessage('Error adding car: ' + error, 'error');
-        });
-    });
-});
-
-function fetchBrands() {
-    fetch('/api/merek')
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('merek');
-            data.forEach(brand => {
-                const option = document.createElement('option');
-                option.value = brand.idMerek;
-                option.textContent = brand.merek;
-                select.appendChild(option);
+        /*.then(response => response.json())*/
+        .then(response => {
+            if(!response.ok) {
+                throw new Error(`Network Response was not ok`);
+            }
+            return response.json().then(data => {   // Properly parse JSON
+                console.log("FULL API RESPONSE: ", data);   // Debug raw data
+                return data;
             });
         })
-        .catch(error => console.error('Error fetching brands: ', error));
-}
-
-function fetchTypes() {
-    fetch('/api/jenis')
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('jenis');
-            data.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type.idJenis;
-                option.value = type.jenis;
-                select.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Error fetching types: ', error));
-}
-
-function fetchCars() {
-    fetch('/api/cars')
-        .then(response => response.json())
-        .then(data => {
+        .then(apiData => {
+            console.log("Raw API response:", apiData);
+            const cars = apiData.data || apiData;
             const carList = document.getElementById('carList');
+            //console.log('Car Data: ', apiData);
             carList.innerHTML = '';
 
-            if(data.length === 0) {
+            // Check for data.data structure
+            /*if(data.length === 0) {*/
+            if(!apiData.data || apiData.data.length === 0) {
                 carList.innerHTML = '<p>No cars found.</p>';
                 return;
             }
 
-            data.forEach(car => {
+            // Use data.data instead of data
+            /* data.forEach(car => { */
+            cars.forEach(car => {
+                // Safely extract brand and type names
+                const brandDisplay = car.merek
+                    ? car.merek.merek
+                    : (car.idMerek_fk ? `[ID: ${car.idMerek_fk}]` : 'Not Specified');
+                    //: `[ID:${car.merek}]`; // 👈 Show ID if name missing (prev changed idMerek_fk to merek)
+
+                const typeDisplay = car.jenis
+                    ? car.jenis.jenis
+                    : (car.idJenis_fk ? `[ID: ${car.idJenis_fk}]` : 'Not Specified');
+                    //: `[ID:${car.jenis}]`; // 👈 Show ID if name missing (prev changed idJenis_fk to jenis)
+
                 const carItem = document.createElement('div');
                 carItem.className = 'car-item';
                 carItem.innerHTML = `
                     <h3>${car.nama_mobil}</h3>
-                    <p><b>Brand: </b> ${car.merek.merek}</p>
-                    <p><b>Type: </b> ${car.jenis.jenis}</p>
-                    <p><b>Horse Power: </b> ${car.horse_power}</p>
+                    <p><b>Brand: </b> ${brandDisplay}</p>
+                    <p><b>Type: </b> ${typeDisplay}</p>
+                    <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
                 `;
                 carList.appendChild(carItem);
-            })
+            });
         })
-        .catch(error => console.error('Error fetching cars: ', error));
-}
+        .catch(error => {
+            console.error('Error fetching cars: ', error);
+            document.getElementById('carList').innerHTML = `
+                <div class="error">Error loading cars: ${error.message}</div>
+            `;
+        });
+    }
 
-function showMessage(message, type) {
-    const messageDiv = document.getElementById('message');
-    messageDiv.textContent = message;
-    messageDiv.className = type;
-}
+    // Update fetchBrands() to handle data.data
+    function fetchBrands() {
+        console.log("Fetching brands from:", `${API_BASE}/api/brands`);
+        console.log("1. Starting brands fetch...") // Debug 1
+        
+        fetch(`${API_BASE}/api/brands`, {
+            headers: DEFAULT_HEADERS // No Credentials!
+        })
+        /*.then(response => response.json())*/
+        .then(response => {
+            console.log("2. Brands response received. Status: ", response); // Debug 2
+            if(!response.ok) {
+                throw new Error(`Network Error, status: ${response.status}`);
+            }
+            return response.json().then(apiData => {
+                console.log("3. Parsed JSON Data: ", apiData);
+                return apiData;
+            });
+        })
+        .then(apiData => {
+            console.log('4. Processing Brands JSON Data: ', apiData);
+            const select = document.getElementById('merek');
+
+            // Clear existing options
+            select.innerHTML = '<option value="">Select a brand</option>';
+            
+            // Check if apiData.data exists, fallback to data if not
+            //const brands = apiData.data || apiData;
+            const brands = apiData.data || apiData;
+            if(!brands || !Array.isArray(brands)) {
+                throw new Error("Invalid brands data format");
+            }
+            
+            if(brands.length === 0) {
+                console.warn("No brands recieved from API");
+                return;
+            }
+
+            // Add new options
+            /*data.forEach(brand => { */
+            brands.forEach(brand => {
+                console.log("5. Adding brand: ", brand);
+                select.add(new Option(brand.merek, brand.idMerek));
+                
+                // Bisa pakai yang text, value, defaultSelected, dan selected
+                /*select.add(new Option(
+                    brand.merek,    // text
+                    brand.idMerek,  // value
+                    false,          // defaultSelected
+                    false           // selected
+                )); */
+
+                // Atau pakai yang const option
+                /*const option = document.createElement('option');
+                option.value = brand.idMerek;
+                option.textContent = brand.merek;
+                select.appendChild(option);*/
+            });
+        })
+        .catch(error => {
+            console.error('6. Failed fetch brands: ', error);
+            const select = document.getElementById('merek');
+            select.innerHTML = `
+                <option value="">Error loading brands (check console)</option>
+            `;
+        });
+    }
+
+    // Update fetchTypes() to handle data.data
+    function fetchTypes() {
+        console.log("Fetching brands from:", `${API_BASE}/api/types`);
+        console.log("1. Starting types fetch...") // Debug 1
+
+        fetch(`${API_BASE}/api/types`, {
+            headers: DEFAULT_HEADERS // No Credentials!
+        })
+        /*.then(response => response.json())*/
+        .then(response => {
+            console.log("2. Types response received. Status: ", response); // Debug 2
+            if(!response.ok) {
+                throw new Error(`Network Response was not ok`);
+            }
+            return response.json().then(apiData => {
+                console.log("3. Parsed JSON Data: ", apiData);
+                return apiData;
+            });
+        })
+        .then(apiData => {
+            console.log('4. Processing Types JSON Data: ', apiData);
+            const select = document.getElementById('jenis');
+            
+            // Clear existing options
+            select.innerHTML = '<option value="">Select a types</option>';
+            
+            // Check if apiData.data exists, fallback to data if not
+            const types = apiData.data || apiData;
+            if(!types || !Array.isArray(types)) {
+                throw new Error("Invalid types data format");
+            }
+
+            if(types.length === 0) {
+                console.warn("No types recieved from API");
+                return;
+            }
+            
+            types.forEach(type => {
+                console.log("5. Adding type: ", type);
+                select.add(new Option(type.jenis, type.idJenis));
+            });
+        })
+        .catch(error => {
+            console.error('6. Failed fetch types: ', error);
+            const select = document.getElementById('jenis');
+            select.innerHTML = `
+                <option value="">Error loading jenis (check console)</option>
+            `;
+        });
+    }
+
+    function showMessage(message, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.textContent = message;
+        messageDiv.className = type;
+
+        // Auto-hide for 5 seconds
+        setTimeout(() => {
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+        }, 5000);
+    }
+
+    // Update form submission to handle response structure
+    document.getElementById('carForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {  // changed idMerek_fk to merek, and idJenis_fk to jenis
+            nama_mobil: document.getElementById('nama_mobil').value,
+            merek: parseInt(document.getElementById('merek').value), // Ensure number
+            jenis: parseInt(document.getElementById('jenis').value), // Ensure number
+            horse_power: parseInt(document.getElementById('horse_power').value) || 0 // Force number
+        };
+
+        console.log("Form Submission Data:", formData); // 👈 Add this
+
+        fetch(`${API_BASE}/api/cars`, {
+            method:'POST',
+            headers: DEFAULT_HEADERS,
+            body: JSON.stringify(formData)
+        })
+        /*.then(response => response.json())*/
+        .then(response => {
+            console.log('API Response: ', response);
+            if(!response.ok) {
+                throw new Error(`HTTP Error! Status ${response.status}`);
+            }
+            // Verify content type is JSON
+            const contentType = response.headers.get('content-type');
+            if(!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Response isn't JSON");
+            }
+            return response.json();
+        })
+        .then(apiData => {
+            // 👇 Add debug checks HERE (before processing cars)
+            // (note: changed idMerek_fk to merek, and idJenis_fk to jenis)
+            console.log("FULL RESPONSE: ", apiData);
+            if(apiData.data?.merek === null && apiData.data?.idMerek_fk) {
+                console.warn("Brand ID Exists but null: ", apiData.data.idMerek_fk);
+            }
+            if(apiData.data?.jenis === null && apiData.data?.idJenis_fk) {
+                console.warn("Jenis ID Exists but null: ", apiData.data.idJenis_fk);
+            }
+
+            console.log("RAW CAR DATA: ", JSON.stringify(apiData, null, 2));
+            const cars = apiData.data || apiData;
+
+            document.getElementById('message').innerText = cars;
+
+            if(apiData.status) {
+                showMessage('Car Added Successfully!', 'success');
+                document.getElementById('carForm').reset();
+                fetchCars(); // Refresh the car list
+            } else {
+                showMessage('Failed to add car: ' + apiData.message, 'error');
+            }
+        })
+        .catch(error => {
+            showMessage('Error adding car: ' + Error.message, 'error');
+        });
+
+    });
+});
+
+console.log("After DOMContentLoaded"); // Debug 3
+
