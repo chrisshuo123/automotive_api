@@ -12,6 +12,54 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchBrands();
     fetchTypes();
     fetchCars();
+
+    // Modal Control Functions
+    function OpenEditModal() {
+        document.getElementById('editModal').style.display = 'flex';
+    }
+    function CloseEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Close Modal when clicking X or outside
+    document.querySelector('.close-modal').addEventListener('click', CloseEditModal);
+    window.addEventListener('click', (e) => {
+        if(e.target === document.getElementById('edit-modal')) {
+            CloseEditModal();
+        }
+    })
+
+    // Modify your loadCarForEdit function to open the modal
+    function loadCarForEdit(id) {
+        fetch(`${API_BASE}/api/cars/${id}`)
+            .then(response => {
+                if(!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(response => { // car => {...
+                // Handle both response formats
+                const car = response.data || response;
+
+                if (!car || !car.idCars) {
+                    throw new Error("Invalid car data recieved");
+                }
+                console.log("Car Data: ", car); // Debug log
+
+                document.getElementById('edit_id').value = car.idCars;
+                document.getElementById('edit_nama_mobil').value = car.nama_mobil;
+                document.getElementById('edit_merek').value = car.idMerek_fk;
+                document.getElementById('edit_jenis').value = car.idJenis_fk;
+                document.getElementById('edit_horse_power').value = car.horse_power;
+            
+                OpenEditModal(); // Show the modal after loading data
+            })
+            .catch(error => {
+                console.error("Edit error:", error);
+                alert("Failed to load car: " + error.message);
+            });
+    }
     
     // Your form submit handler...
     /*const fetchOptions = {
@@ -30,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
         /*.then(response => response.json())*/
         .then(response => {
             if(!response.ok) {
-                throw new Error(`Network Response was not ok`);
+                throw new Error(`Network Response was not ok. HTTP ${response.status}`);
             }
             return response.json().then(data => {   // Properly parse JSON
                 console.log("FULL API RESPONSE: ", data);   // Debug raw data
@@ -72,12 +120,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><b>Brand: </b> ${brandDisplay}</p>
                     <p><b>Type: </b> ${typeDisplay}</p>
                     <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
+                    <!-- This is for Edit Button in Panel Update Menu -->
+                    <button class="edit-btn" data-id="${car.idCars}">Edit</button>
                 `;
                 carList.appendChild(carItem);
             });
+
+            // Add Event Listeners for all Edit Buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const carId = btn.getAttribute('data-id');
+                    loadCarForEdit(carId); // Your existing edit function
+                });
+            });
         })
         .catch(error => {
-            console.error('Error fetching cars: ', error);
+            console.error('Error fetching cars. Car list Error: ', error);
             document.getElementById('carList').innerHTML = `
                 <div class="error">Error loading cars: ${error.message}</div>
             `;
@@ -105,14 +163,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(apiData => {
             console.log('4. Processing Brands JSON Data: ', apiData);
-            const select = document.getElementById('merek');
-
-            // Clear existing options
-            select.innerHTML = '<option value="">Select a brand</option>';
             
             // Check if apiData.data exists, fallback to data if not
             //const brands = apiData.data || apiData;
             const brands = apiData.data || apiData;
+            const addSelect = document.getElementById('merek');
+            const editSelect = document.getElementById('edit_merek');
+            
+            // Clear existing options
+            [addSelect, editSelect].forEach(select => {
+                select.innerHTML = '<option value="">Select a brand</option>';
+            });
+
             if(!brands || !Array.isArray(brands)) {
                 throw new Error("Invalid brands data format");
             }
@@ -126,7 +188,14 @@ document.addEventListener('DOMContentLoaded', function() {
             /*data.forEach(brand => { */
             brands.forEach(brand => {
                 console.log("5. Adding brand: ", brand);
-                select.add(new Option(brand.merek, brand.idMerek));
+                
+                const option = new Option(brand.merek, brand.idMerek);
+                const editOption = new Option(brand.merek, brand.idMerek);
+
+                addSelect.add(option);
+                editSelect.add(editOption);
+                
+                // select.add(new Option(brand.merek, brand.idMerek));
                 
                 // Bisa pakai yang text, value, defaultSelected, dan selected
                 /*select.add(new Option(
@@ -145,10 +214,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('6. Failed fetch brands: ', error);
-            const select = document.getElementById('merek');
-            select.innerHTML = `
-                <option value="">Error loading brands (check console)</option>
-            `;
+            const selects = document.querySelectorAll('#merek', "#edit_merek");
+            //const select = document.getElementById('merek');
+            selects.forEach(select => {
+                select.innerHTML = `
+                    <option value="">Error loading brands (check console)</option>
+                `;
+            });
         });
     }
 
@@ -173,13 +245,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(apiData => {
             console.log('4. Processing Types JSON Data: ', apiData);
-            const select = document.getElementById('jenis');
-            
+            //const select = document.getElementById('jenis');
+            const addSelect = document.getElementById('jenis');
+            const editSelect = document.getElementById('edit_jenis');
+
             // Clear existing options
-            select.innerHTML = '<option value="">Select a types</option>';
+            [addSelect, editSelect].forEach(select => {
+                select.innerHTML = '<option value="">Select a types</option>';
+            });
             
             // Check if apiData.data exists, fallback to data if not
             const types = apiData.data || apiData;
+
             if(!types || !Array.isArray(types)) {
                 throw new Error("Invalid types data format");
             }
@@ -191,15 +268,25 @@ document.addEventListener('DOMContentLoaded', function() {
             
             types.forEach(type => {
                 console.log("5. Adding type: ", type);
-                select.add(new Option(type.jenis, type.idJenis));
+                
+                const option = new Option(type.jenis, type.idJenis);
+                const editOption = new Option(type.jenis, type.idJenis);
+                
+                addSelect.add(option);
+                editSelect.add(editOption);
+
+                //select.add(new Option(type.jenis, type.idJenis));
             });
         })
         .catch(error => {
             console.error('6. Failed fetch types: ', error);
-            const select = document.getElementById('jenis');
-            select.innerHTML = `
-                <option value="">Error loading jenis (check console)</option>
-            `;
+            const selects = document.querySelectorAll('#jenis', '#edit_jenis');
+            //const select = document.getElementById('jenis');
+            selects.forEach(select => {
+                select.innerHTML = `
+                    <option value="">Error loading jenis (check console)</option>
+                `;
+            })
         });
     }
 
@@ -215,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    // Update form submission to handle response structure
+    // Update form submission to handle response structure (ADD CARS)
     document.getElementById('carForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -273,7 +360,41 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             showMessage('Error adding car: ' + Error.message, 'error');
         });
+    });
 
+    // Handle Form Submission (UPDATE CARS)
+    document.getElementById('editCarForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            nama_mobil : document.getElementById('edit_nama_mobil').value,
+            idMerek_fk : parseInt(document.getElementById('edit_merek').value),
+            idJenis_fk : parseInt(document.getElementById('edit_jenis').value),
+            horse_power : parseInt(document.getElementById('edit_horse_power').value)
+        };
+
+        const id = document.getElementById('edit_id').value;
+        
+        fetch(`${API_BASE}/api/cars/${id}`, {
+            method : "PUT",
+            headers : DEFAULT_HEADERS,
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(updatedCar => { // updatedCar is now the full car object
+            console.log("Update car: ", updatedCar);
+            console.log("Updated car with relationships: ", updatedCar.merek);
+            document.getElementById('editModal').style.display = 'none';
+            fetchCars(); // Refresh the list
+            showMessage('Car updated successfully!', 'success');
+        })
+        .catch(error => {
+            console.log("Update Failed: ", error);
+            showMessage('Update failed: ' + error, 'error');
+        });
     });
 });
 
