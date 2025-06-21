@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -72,6 +73,70 @@ func CreateCarsController(c echo.Context) error {
 	})
 }
 
+func UpdateCarController(c echo.Context) error {
+	// Get ID from URL
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{
+			"status": "false",
+			"error":  "Invalid ID",
+		})
+	}
+
+	// 1. Get Existing Cars, check if cars exists
+	var car models.Cars
+	if err := configs.DB.First(&car, id).Error; err != nil {
+		return c.JSON(404, map[string]interface{}{
+			"status": false,
+			"error":  "Car not found",
+		})
+	}
+
+	// 2. Bind updated data (partial updates allowed)
+	//var updateData models.Cars
+	/*if err := c.Bind(&car); err != nil {
+		return c.JSON(400, err.Error())
+	}*/
+	if err := c.Bind(&car); err != nil {
+		return c.JSON(400, map[string]interface{}{
+			"status": false,
+			"error":  err.Error(),
+		})
+	}
+
+	// 3. Save Changes
+	if err := configs.DB.Save(&car).Error; err != nil {
+		return c.JSON(500, map[string]interface{}{
+			"status": false,
+			"error":  err.Error(),
+		})
+	}
+
+	// Update only non-zero fields
+	/*result := configs.DB.Model(&existingCars).Updates(updateData)
+	if result.Error != nil {
+		return c.JSON(500, result.Error.Error())
+	}*/
+
+	// 4. Force Reload with relationships
+	var updatedCar models.Cars
+	if err := configs.DB.
+		Preload("Merek").
+		Preload("Jenis").
+		First(&updatedCar, id).Error; err != nil {
+		return c.JSON(500, map[string]interface{}{
+			"status": false,
+			"error":  err.Error(),
+		})
+	}
+
+	return c.JSON(200, map[string]interface{}{
+		"status":  true,
+		"message": "Car updated successfully",
+		"data":    updatedCar, // Directly return the car object
+	})
+}
+
 func GetCarsController(c echo.Context) error {
 	var cars []models.Cars
 
@@ -91,6 +156,7 @@ func GetCarsController(c echo.Context) error {
 			return db.Select("idJenis, jenis")
 		}).
 		Find(&cars)
+		//First(&cars, id)
 
 	/*if result.Error != nil {
 		return c.JSON(500, result.Error.Error())
@@ -143,6 +209,24 @@ func GetCarsController(c echo.Context) error {
 		Status:  true,
 		Data:    cars,
 	})
+}
+
+func GetCarController(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(400, map[string]string{"error": "Invalid ID Format"})
+	}
+
+	var car models.Cars
+	result := configs.DB.
+		Preload("Merek").
+		Preload("Jenis").
+		First(&car, id) // Use First() for single records
+
+	if result.Error != nil {
+		return c.JSON(404, map[string]string{"error": "Car not found"})
+	}
+	return c.JSON(200, car)
 }
 
 func GetMerekController(c echo.Context) error {
