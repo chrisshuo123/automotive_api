@@ -133,3 +133,21 @@ button:hover {
 .close-modal:hover {
     color: #333;
 }
+
+/* For the Delete Button */
+.delete-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+}
+
+.car-actions {
+    margin-top: 10px;
+}
