@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTypes();
     fetchCars();
 
-    // Modal Control Functions
+    // === 1 - UPDATE MODAL CONTROL FUNCTIONS ===
     function OpenEditModal() {
         document.getElementById('editModal').style.display = 'flex';
     }
@@ -70,6 +70,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };*/
 
+    // === 3 - DELETE CONTROL FUNCTIONS ===
+
+    function deleteCar(id) {
+        if(!confirm('Are you sure you want to delete this car?')) {
+            return;
+        }
+
+        fetch(`${API_BASE}/api/cars/${id}`, {
+            method: 'DELETE',
+            headers: DEFAULT_HEADERS
+        })
+        .then(response => {
+            if(!response.ok) throw new error(`HTTP Error! Status: ${response.status}`);
+            return response.json();
+        })
+        .then(apiData => {
+            showMessage('Car deleted successfully!', 'success');
+            fetchCars(); // Refresh the list
+        })
+        .catch(error => {
+            console.error('Delete error: ', error);
+            showMessage('Failed to delete car, error message: ' + error.message, ' error');
+        });
+    }
+
     // Update fetchCars() to handle data.data
     function fetchCars() {
         fetch(`${API_BASE}/api/cars?_expand=merek&_expand=jenis`, { // Include related data
@@ -122,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
                     <!-- This is for Edit Button in Panel Update Menu -->
                     <button class="edit-btn" data-id="${car.idCars}">Edit</button>
+                    <button class="delete-btn" data-id="${car.idCars}">Delete</button>
                 `;
                 carList.appendChild(carItem);
             });
@@ -302,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
+    //  === 1 - CREATE CAR EXECUTION ===
     // Update form submission to handle response structure (ADD CARS)
     document.getElementById('carForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -362,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle Form Submission (UPDATE CARS)
+    //  === 2 - HANDLE FORM SUBMISSION (UPDATE CARS) ===
     document.getElementById('editCarForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -395,6 +422,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log("Update Failed: ", error);
             showMessage('Update failed: ' + error, 'error');
         });
+    });
+
+    // === 3 - DELETE CARS EXECUTION ===
+    document.addEventListener('click', function(e) {
+        if(e.target.classList.contains('delete-btn')) {
+            const carId = e.target.getAttribute('data-id');
+            deleteCar(carId);
+        }
     });
 });
 
