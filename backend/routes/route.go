@@ -12,7 +12,7 @@ func InitRoute(e *echo.Echo) {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		//AllowOrigins:     []string{"http://127.0.0.1:5500", "http://localhost:5500"},
 		AllowOrigins:     []string{"*"}, // Allow all origins during development
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut},
+		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodOptions, http.MethodPut, http.MethodDelete},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: true,
 	}))
@@ -25,4 +25,5 @@ func InitRoute(e *echo.Echo) {
 	e.GET("/api/brands", controllers.GetMerekController)
 	e.GET("/api/types", controllers.GetJenisController)
 	e.PUT("/api/cars/:id", controllers.UpdateCarController)
+	e.DELETE("api/cars/:id", controllers.DeleteCarController)
 }
