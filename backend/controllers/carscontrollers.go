@@ -210,7 +210,6 @@ func GetCarsController(c echo.Context) error {
 		Data:    cars,
 	})
 }
-
 func GetCarController(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -272,5 +271,35 @@ func GetJenisController(c echo.Context) error {
 		Message: "Berhasil menampilkan data",
 		Status:  true,
 		Data:    jenis,
+	})
+}
+
+func DeleteCarController(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(400, map[string]interface{}{
+			"status": false,
+			"error":  "Invalid ID Format",
+		})
+	}
+
+	result := configs.DB.Delete(&models.Cars{}, id)
+	if result.Error != nil {
+		return c.JSON(500, map[string]interface{}{
+			"status": false,
+			"error":  result.Error.Error(),
+		})
+	}
+
+	if result.RowsAffected == 0 {
+		return c.JSON(404, map[string]interface{}{
+			"status": false,
+			"error":  "Car not found",
+		})
+	}
+
+	return c.JSON(200, map[string]interface{}{
+		"status":  true,
+		"message": "Car deleted successfully!",
 	})
 }
