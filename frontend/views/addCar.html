@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <meta name="twitter:widgets:autoload" content="off">
+    <link rel="stylesheet" href="../public/css/style_panelCar.css">
+    <title>Add Car</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Add new car</h1>
+        <form id="carForm">
+            <div class="form-group">
+                <label for="nama_mobil">Car Name: </label>
+                <input type="text" id="nama_mobil" name="nama_mobil" required>
+            </div>
+
+            <div class="form-group">
+                <label for="merek">Brand: </label>
+                <select id="merek" name="merek" required>
+                    <option value="">Select a brand</option>
+                    <option value="1">Toyota</option>
+                    <!-- Options will be populated by JavaScript -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="jenis">Type: </label>
+                <select id="jenis" name="jenis" required>
+                    <option value="">Select a type</option>
+                    <!-- Options will be populated by Javascript -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="horse_power">Horse Power: </label>
+                <input type="number" id="horse_power" name="horse_power" required>
+            </div>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <h2>Car List</h2>
+        <div id="carList"></div>
+    </div>
+
+    <div id="editModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Edit Car</h2>
+            <form id="editCarForm">
+                <input type="hidden" id="edit_id">
+
+                <label>Car Name:</label>
+                <input type="text" id="edit_nama_mobil" required>
+
+                <label>Brand:</label>
+                <select id="edit_merek" name="merek" required>
+                    <option value="">Select a brand</option>
+                    <!-- Populated by fetchBrands() -->
+                </select>
+
+                <!--<select id="merek" name="merek" required>
+                    <option value="">Select a brand</option>
+                    <option value="1">Toyota</option>
+                    <!-- Options will be populated by JavaScript -->
+                <!--</select>-->
+
+                <label>Type:</label>
+                <select id="edit_jenis" name="jenis" required>
+                    <option value="">Select a Type</option>
+                    <!-- Populated by fetchTypes() -->
+                </select>
+
+                <label>Horse Power:</label>
+                <input type="number" id="edit_horse_power" required>
+
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../public/js/script.js" defer>
+        console.log("Script loaded - API_BASE:", API_BASE);
+        //alert("Script is running!");
+        fetchBrands(); // Call manually
+        fetchTypes();
+        fetchCars();
+    </script>
+</body>
+</html>

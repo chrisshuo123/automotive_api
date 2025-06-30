@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <link rel="stylesheet" href="../public/css/style_index.css">
+    <title>Car Inventory</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Car Inventory</h1>
+        <div class="car-list" id="carList">
+            <!-- Cars will be loaded here by JavaScript -->
+            <div class="loading"><p>Loading cars...</p></div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch Cars API Error
+        fetch('http://localhost:8000/api/cars')
+            .then(response => {
+                console.log("API Response:", response);
+                if(!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+                // Verify content type is JSON
+                const contentType = response.headers.get('content-type');
+                if(!contentType || !contentType.includes('application/json')) {
+                    throw new TypeError("Response isn't JSON");
+                }
+                return response.json();
+            })
+            .then(data => {
+                const carList = document.getElementById("carList");
+
+                // Check if data exists and has the expected structure
+                if(!data || !data.data || !Array.isArray(data.data)) {
+                    throw new Error("Invalid data structure from API");
+                }
+
+                if(!data.data || data.data.length === 0) { // changed cars.length to data.data.length. !data.data added.
+                    carList.innerHTML = '<div class="no-cars">No cars found in inventory.</div>'
+                    
+                    return;
+                }
+
+                carList.innerHTML = ''; // Clear Loading message
+                
+                data.data.forEach(car => { // Changed cars, to data.data
+                    const carCard = document.createElement('div');
+                    carCard.className = 'car-card';
+                    carCard.innerHTML = `
+                        <h2>${car.nama_mobil}</h2>
+                        <div class="car-details">
+                            <p><b>Brand: </b>${car.merek?.merek}</p>
+                            <p><b>Jenis: </b>${car.jenis?.jenis}</p>
+                            <p><b>Horse Power: </b>${car.horse_power} CC</p>
+                        </div>
+                    `; // revised merek.merek and jenis.jenis, by adding each with '?'
+                    carList.appendChild(carCard);
+                });
+            })
+            .catch(error => {
+                console.error("Full Error: ", error);
+                document.getElementById('carList').innerHTML = 
+                    `<div class="error">Error Loading Cars: ${error.message}</div>`;
+            });
+    </script>
+</body>
+</html>
