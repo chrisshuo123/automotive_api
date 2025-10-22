@@ -24,7 +24,7 @@ This project mainly showcases my ability in creating Pointer APIs using Golang M
 - 💡 Add Approval Workflow _(When a user Adds or update new data, the database need to be validated by admin before submitted to MySQL DB)_
 - 💡 Add 3D Lowpoly Cars Model _(Why Lowpoly? Because We're a small budgetted team)_
 
-**Tech Stack:** Laravel, MySQL, PHP
+**Tech Stack:** Golang, MySQL, HTML, CSS, JS
 
 # Instructions
 In the VSCode IDE on Terminal _(low side of the screen)_, input this:
