@@ -7,24 +7,24 @@ Saya akan update mengenai caranya untuk mengsetup Postman API serta MySQL DB men
 
 ## 🚧 Learning Project: [Automotive API]
 
-**Status:** In Progress - Core features completed, optimization ongoing
+**Status:** Dalam perkembangan - Fitur inti telah tuntas, optimasi sedang berlangsung
 
-**What's Working:**
-- ✅ Database migration & seeding
+**Apa yang dapat bekerja:**
+- ✅ Migrasi & Seeding Database
 - ✅ HTML FrontEnd API
-- ✅ RESTful API endpoints
+- ✅ RESTful API end point
 
-**Currently Learning:**
-- 🔄 Update Feature in Postman API
-- 🔄 API documentation
+**Sedang Belajar:**
+- 🔄 Menambahkan fitur Update di Postman API
+- 🔄 Dokumentasi API
 - 🔄 Golang Approval Workflow
 
-**Future Improvement:**
-- 💡 Add images per vehicle API
-- 💡 Add Approval Workflow _(When a user Adds or update new data, the database need to be validated by admin before submitted to MySQL DB)_
-- 💡 Add 3D Lowpoly Cars Model _(Why Lowpoly? Because We're a small budgetted team)_
+**Perbaikan di Masa Depan:**
+- 💡 Menambahkan Image pada setiap API Kendaraan
+- 💡 Menambahkan 'Approval Workflow' _(saat user menambahkan atau mengupdate data baru, database perlu divalidasi oleh admin sebelum dikirim ke DB MySQL)_
+- 💡 Menambahkan Model Mobil 3D Lowpoly _(Mengapa Lowpoly? Karena kami merupakan tim kecil)_
 
-**Tech Stack:** Laravel, MySQL, PHP
+**Tech Stack:** Golang, MySQL, HTML, CSS, JS
 
 # Instruksi
 
