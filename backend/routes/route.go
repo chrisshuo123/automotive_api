@@ -18,4 +18,6 @@ func InitRoute(e *echo.Echo) {
 
 	e.POST("/api/cars", controllers.CreateCarsController)
 	e.GET("/api/cars", controllers.GetCarsController)
+	e.GET("/api/brands", controllers.GetBrandsController)
+	e.GET("/api/brands", controllers.GetTypesController)
 }
