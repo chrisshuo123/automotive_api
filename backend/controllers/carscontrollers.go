@@ -64,8 +64,47 @@ func GetCarsController(c echo.Context) error {
 
 	//return c.JSON(http.StatusOK, cars)
 	return c.JSON(http.StatusOK, models.BaseResponse{
-		Message: "Berhasil menampilkan data",
+		Message: "Berhasil menampilkan data cars",
 		Status:  true,
 		Data:    cars,
+	})
+}
+
+func GetBrandsController(c echo.Context) error {
+	var brand []models.Merek
+
+	result := configs.DB.Find(&brand)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: "Failed to load Brand: " + result.Error.Error(),
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Berhasil menampilkan data Brand",
+		Status:  true,
+		Data:    brand,
+	})
+}
+
+func GetTypesController(c echo.Context) error {
+	var types []models.Jenis
+
+	result := configs.DB.Find(&types)
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: "Failed to load Car Type: " + result.Error.Error(),
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Berhasil menampilkan data Types",
+		Status:  true,
+		Data:    types,
 	})
 }
