@@ -213,19 +213,41 @@ func GetCarsController(c echo.Context) error {
 func GetCarController(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid ID Format"})
+		// return c.JSON(400, map[string]string{"error": "Invalid ID Format"})
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID format",
+			Status:  false,
+			Data:    nil,
+		})
 	}
 
-	var car models.Cars
+	// var car []models.Cars // Single record, not slice
+	var car models.Cars // Single struct, NOT slice
+
+	// idCars := c.QueryParam("idCars")
+
+	// Build query with Preload and filter by ID
 	result := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
 		First(&car, id) // Use First() for single records
 
+	// result := query.Find(&cars)
+
 	if result.Error != nil {
-		return c.JSON(404, map[string]string{"error": "Car not found"})
+		// return c.JSON(404, map[string]string{"error": "Car not found"})
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Cars not found",
+			Status:  false,
+			Data:    nil,
+		})
 	}
-	return c.JSON(200, car)
+	// return c.JSON(200, car)
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Berhasil menampilkan data car",
+		Status:  true,
+		Data:    car,
+	})
 }
 
 func GetMerekController(c echo.Context) error {

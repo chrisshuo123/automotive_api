@@ -24,7 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close Modal when clicking X or outside
     document.querySelector('.close-modal').addEventListener('click', CloseEditModal);
     window.addEventListener('click', (e) => {
-        if(e.target === document.getElementById('edit-modal')) {
+        const modal = document.getElementById('editModal');
+        const modalContent = modal?.querySelector('modal-content');
+
+        // Close if clicking the background overlay, NOT the content
+        if(e.target === modal) {
             CloseEditModal();
         }
     })
@@ -252,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update fetchTypes() to handle data.data
     function fetchTypes() {
-        console.log("Fetching brands from:", `${API_BASE}/api/types`);
+        console.log("Fetching types from:", `${API_BASE}/api/types`);
         console.log("1. Starting types fetch...") // Debug 1
 
         fetch(`${API_BASE}/api/types`, {
