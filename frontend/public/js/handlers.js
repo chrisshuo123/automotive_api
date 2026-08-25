@@ -9,7 +9,9 @@ export function handleAddCar(e) {
         nama_mobil: document.getElementById('nama_mobil').value,
         idMerek_fk: parseInt(document.getElementById('merek').value),
         idJenis_fk: parseInt(document.getElementById('jenis').value),
-        horse_power: parseInt(document.getElementById('horse_power').value) || 0
+        horse_power: parseInt(document.getElementById('horse_power').value) || 0,
+        // idStatus_fk: parseInt(document.getElementById('status').value)
+        idStatus_fk: 1
     };
 
     createCar(formData)
@@ -34,7 +36,8 @@ export function handleUpdateCar(e) {
         nama_mobil: document.getElementById('edit_nama_mobil').value,
         idMerek_fk: parseInt(document.getElementById('edit_merek').value),
         idJenis_fk: parseInt(document.getElementById('edit_jenis').value),
-        horse_power: parseInt(document.getElementById('edit_horse_power').value)
+        horse_power: parseInt(document.getElementById('edit_horse_power').value),
+        idStatus_fk: parseInt(document.getElementById('edit_status').value)
     };
 
     updateCar(id, formData)
