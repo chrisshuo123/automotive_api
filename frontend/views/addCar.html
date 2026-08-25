@@ -41,6 +41,12 @@
 
             <button type="submit">Submit</button>
         </form>
+        <button type="button" onclick="window.location.href='preview.html'" style="background: #17a2b8;">
+            📋 View Pending Changes
+        </button>
+        <span id="pendingBadge" style="background: red; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px;">
+            0
+        </span>
 
         <div id="message" class="message"></div>
 
@@ -91,6 +97,21 @@
         fetchTypes();
         fetchCars();
     </script> -->
+    <script>
+        // Show pending count
+        function updatePendingBadge() {
+            const pending = JSON.parse(sessionStorage.getItem('pendingChanges') || '[]');
+            const badge = document.getElementById('pendingBadge');
+            if (badge) {
+                const count = pending.filter(p => p.status === 'pending').length;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', updatePendingBadge);
+    </script>
     <script type="module" src="../public/js/main.js"></script>
 </body>
 </html>
