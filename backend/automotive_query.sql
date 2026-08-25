@@ -66,6 +66,10 @@ update cars
 alter table cars
 	modify column idStatus_fk int(10) not null;
     
+alter table cars
+	add constraint idStatus_fk foreign key (idStatus_fk)
+    references status(idStatus);
+    
 -- For the testt car, sets the idStatus_fk to 1 (needs preview)
 update cars
 	set idStatus_fk = 1 where idCars = 51;
