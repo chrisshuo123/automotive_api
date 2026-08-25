@@ -6,10 +6,12 @@ type Cars struct {
 	MerekID    *uint  `gorm:"column:idMerek_fk" json:"idMerek_fk" form:"idMerek_fk"`
 	JenisID    *uint  `gorm:"column:idJenis_fk" json:"idJenis_fk" form:"idJenis_fk"`
 	HorsePower uint   `gorm:"column:horse_power" json:"horse_power" form:"horse_power"`
+	StatusID   *uint  `gorm:"column:idStatus_fk" json:"idStatus_fk" form:"idStatus_fk"`
 
 	// Relationships
-	Merek *Merek `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
-	Jenis *Jenis `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"jenis"`
+	Merek  *Merek  `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
+	Jenis  *Jenis  `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"jenis"`
+	Status *Status `gorm:"foreignKey:idStatus_fk;references:idStatus" json:"status"`
 }
 
 type Merek struct {
@@ -25,4 +27,9 @@ func (Merek) TableName() string {
 type Jenis struct {
 	ID   uint   `gorm:"column:idJenis;primaryKey" json:"idJenis" form:"id"`
 	Nama string `gorm:"column:jenis" json:"jenis" form:"jenis"`
+}
+
+type Status struct {
+	ID   uint   `gorm:"column:idStatus;primaryKey" json:"idStatus" form:"id"`
+	Nama string `gorm:"column:status" json:"status" form:"status"`
 }
