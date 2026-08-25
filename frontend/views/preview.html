@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Changes</title>
+    <style>
+        .preview-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .preview-header h1 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .preview-stats {
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .preview-item {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .preview-item:hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .preview-item.pending {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .preview-item.approved {
+            border-left: 4px solid #28a745;
+            opacity: 0.7;
+        }
+        
+        .preview-item.cancelled {
+            border-left: 4px solid #dc3545;
+            opacity: 0.5;
+        }
+        
+        .preview-item .car-info {
+            flex: 1;
+        }
+        
+        .preview-item .car-info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+        
+        .preview-item .car-info p {
+            margin: 3px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .preview-item .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .preview-item .actions button {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .btn-approve {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background: #218838;
+        }
+        
+        .btn-approve:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-edit-preview {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-edit-preview:hover {
+            background: #e0a800;
+        }
+        
+        .btn-cancel-preview {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-cancel-preview:hover {
+            background: #c82333;
+        }
+        
+        .btn-cancel-preview:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .preview-actions-bottom {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-submit-all {
+            background: #007bff;
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .btn-submit-all:hover {
+            background: #0056b3;
+        }
+        
+        .btn-submit-all:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-pending {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-approved {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-cancelled {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state h2 {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <!-- Header -->
+        <div class="preview-header">
+            <h1>📋 Review Changes</h1>
+            <div class="preview-stats">
+                <span id="totalItems">0</span> items pending review
+            </div>
+        </div>
+
+        <!-- Preview List -->
+        <div id="previewList">
+            <!-- Items will be rendered here -->
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="preview-actions-bottom">
+            <button class="btn-back" onclick="window.location.href='addCar.html'">← Back to Form</button>
+            <div>
+                <span id="approvedCount" style="margin-right: 20px; color: #28a745; font-weight: bold;">
+                    Approved: 0
+                </span>
+                <button class="btn-submit-all" id="submitAllBtn" disabled>
+                    Submit All Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createCar, updateCar } from  '../public/js/api.js';
+        import { showMessage } from '../public/js/ui.js';
+
+        // Get data from sessionStorage
+        const pendingChanges = JSON.parse(sessionStorage.getItem('pendingChanges') || '[]');
+        let changes = pendingChanges.map(item => ({
+            ...item,
+            status: 'pending' // pending, approved, cancelled
+        }));
+
+        // Render all items
+        function renderPreview() {
+            const container = document.getElementById('previewList');
+            
+            if (changes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h2>📭 No changes to review</h2>
+                        <p>Go back to the form and add or edit a car first.</p>
+                    </div>
+                `;
+                document.getElementById('submitAllBtn').disabled = true;
+                return;
+            }
+
+            container.innerHTML = changes.map((item, index) => `
+                <div class="preview-item ${item.status}" data-index="${index}">
+                    <div class="car-info">
+                        <h3>
+                            ${item.action === 'add' ? '➕' : '✏️'} ${item.data.nama_mobil}
+                            <span class="badge badge-${item.status}">${item.status.toUpperCase()}</span>
+                        </h3>
+                        <p>
+                            <strong>Brand:</strong> ${getBrandName(item.data.idMerek_fk)} |
+                            <strong>Type:</strong> ${getTypeName(item.data.idJenis_fk)} |
+                            <strong>Horse Power:</strong> ${item.data.horse_power}
+                        </p>
+                        <p style="font-size: 12px; color: #999;">
+                            ${item.action === 'add' ? 'New Car' : `Edit ID: ${item.editId}`} • 
+                            ${new Date(item.timestamp).toLocaleString()}
+                        </p>
+                    </div>
+                    <div class="actions">
+                        ${item.status === 'pending' ? `
+                            <button class="btn-approve" onclick="approveItem(${index})">✅ Approve</button>
+                            <button class="btn-edit-preview" onclick="editItem(${index})">✏️ Edit</button>
+                            <button class="btn-cancel-preview" onclick="cancelItem(${index})">❌ Cancel</button>
+                        ` : item.status === 'approved' ? `
+                            <button class="btn-cancel-preview" onclick="cancelItem(${index})">↩️ Undo</button>
+                        ` : `
+                            <button class="btn-approve" onclick="approveItem(${index})">↩️ Restore</button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+
+            // Update stats
+            const total = changes.length;
+            const approved = changes.filter(c => c.status === 'approved').length;
+            const pending = changes.filter(c => c.status === 'pending').length;
+            
+            document.getElementById('totalItems').textContent = pending;
+            document.getElementById('approvedCount').textContent = `Approved: ${approved}`;
+            document.getElementById('submitAllBtn').disabled = approved === 0;
+            
+            // Store back to sessionStorage
+            sessionStorage.setItem('pendingChanges', JSON.stringify(changes));
+        }
+
+        // Helper: Get brand name
+        function getBrandName(id) {
+            const brands = JSON.parse(sessionStorage.getItem('brands') || '[]');
+            const brand = brands.find(b => b.idMerek === id);
+            return brand ? brand.merek : `ID: ${id}`;
+        }
+
+        // Helper: Get type name
+        function getTypeName(id) {
+            const types = JSON.parse(sessionStorage.getItem('types') || '[]');
+            const type = types.find(t => t.idJenis === id);
+            return type ? type.jenis : `ID: ${id}`;
+        }
+
+        // Actions
+        window.approveItem = function(index) {
+            if (changes[index].status === 'pending') {
+                changes[index].status = 'approved';
+                renderPreview();
+            } else if (changes[index].status === 'cancelled') {
+                changes[index].status = 'pending';
+                renderPreview();
+            }
+        };
+
+        window.cancelItem = function(index) {
+            if (changes[index].status === 'pending') {
+                changes[index].status = 'cancelled';
+                renderPreview();
+            } else if (changes[index].status === 'approved') {
+                changes[index].status = 'pending';
+                renderPreview();
+            }
+        };
+
+        window.editItem = function(index) {
+            const item = changes[index];
+            // Store the item to edit and redirect back to form
+            sessionStorage.setItem('editItem', JSON.stringify(item));
+            window.location.href = 'addCar.html?edit=' + index;
+        };
+
+        // Submit all approved
+        document.getElementById('submitAllBtn').addEventListener('click', async function() {
+            // Get ALL items that are not cancelled (pending + approved)
+            const approvedItems = changes.filter(c => c.status === 'approved');
+            
+            if (approvedItems.length === 0) {
+                alert('No approved items to submit!');
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = 'Submitting...';
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const item of approvedItems) {
+                try {
+                    if (item.action === 'add') {
+                        const result = await createCar(item.data);
+                        if (result.status) successCount++;
+                        else errorCount++;
+                    } else if (item.action === 'edit') {
+                        await updateCar(item.editId, item.data);
+                        successCount++;
+                    }
+                } catch (error) {
+                    errorCount++;
+                    console.error('Submit error:', error);
+                }
+            }
+
+            // Show result
+            alert(`✅ ${successCount} items submitted successfully!\n❌ ${errorCount} items failed.`);
+
+            // Remove submitted items
+            changes = changes.filter(c => c.status !== 'approved');
+            sessionStorage.setItem('pendingChanges', JSON.stringify(changes));
+            
+            if (changes.length === 0) {
+                window.location.href = 'addCar.html';
+            } else {
+                renderPreview();
+            }
+        });
+
+        // Initial render
+        renderPreview();
+    </script>
+</body>
+</html>
