@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchBrands()
         .then(apiData => {
             const brands = apiData.data || apiData;
+            sessionStorage.setItem('brands', JSON.stringify(brands));
             populateSelect('merek', brands, 'merek', 'idMerek');
             populateSelect('edit_merek', brands, 'merek', 'idMerek');
         })
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTypes()
         .then(apiData => {
             const types = apiData.data || apiData;
+            sessionStorage.setItem('types', JSON.stringify(types));
             populateSelect('jenis', types, 'jenis', 'idJenis');
             populateSelect('edit_jenis', types, 'jenis', 'idJenis');
         })
