@@ -19,6 +19,12 @@ export async function fetchTypes() {
     return response.json();
 }
 
+export async function fetchStatus() {
+    const response = await fetch(`${API_BASE}/api/status`, {headers: DEFAULT_HEADERS});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+}
+
 export async function createCar(data) {
     const response = await fetch(`${API_BASE}/api/cars`, {
         method: 'POST',
