@@ -39,23 +39,30 @@
                     throw new Error("Invalid data structure from API");
                 }
 
-                if(!data.data || data.data.length === 0) { // changed cars.length to data.data.length. !data.data added.
-                    carList.innerHTML = '<div class="no-cars">No cars found in inventory.</div>'
-                    
+                if(data.data.length === 0) { // changed cars.length to data.data.length. !data.data added.
+                    carList.innerHTML = '<div class="no-cars">No cars found in inventory.</div>';
+                    return;
+                }
+
+                // Filter: Hanya tampilkan cars dengan status "approved" (idStatus_fk = 2)
+                const approvedCars = data.data.filter(car => car.idStatus_fk === 2);
+
+                if(approvedCars.length === 0) {
+                    carList.innerHTML = '<div class="no-cars">No approved cars found.</div>'
                     return;
                 }
 
                 carList.innerHTML = ''; // Clear Loading message
                 
-                data.data.forEach(car => { // Changed cars, to data.data
+                approvedCars.forEach(car => { // Changed cars, to data.data
                     const carCard = document.createElement('div');
                     carCard.className = 'car-card';
                     carCard.innerHTML = `
                         <h2>${car.nama_mobil}</h2>
                         <div class="car-details">
-                            <p><b>Brand: </b>${car.merek?.merek}</p>
-                            <p><b>Jenis: </b>${car.jenis?.jenis}</p>
-                            <p><b>Horse Power: </b>${car.horse_power} CC</p>
+                            <p><b>Brand: </b>${car.merek?.merek || 'Not Specified'}</p>
+                            <p><b>Jenis: </b>${car.jenis?.jenis  || 'Not Specified'}</p>
+                            <p><b>Horse Power: </b>${car.horse_power  || 'N/A'} CC</p>
                         </div>
                     `; // revised merek.merek and jenis.jenis, by adding each with '?'
                     carList.appendChild(carCard);
