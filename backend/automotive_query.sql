@@ -59,6 +59,17 @@ alter table cars
 	rename column idMerek_id to idMerek_fk,
     rename column idJenis_id to idJenis_fk;
 
+alter table cars
+	add column idStatus_fk INT(10) after horse_power;
+update cars
+	set idStatus_fk = 2 where idStatus_fk IS NOT NULL; -- Prev set to 'IS NULL'
+alter table cars
+	modify column idStatus_fk int(10) not null;
+    
+-- For the testt car, sets the idStatus_fk to 1 (needs preview)
+update cars
+	set idStatus_fk = 1 where idCars = 51;
+
 SHOW CREATE TABLE cars;
 SELECT CONSTRAINT_NAME 
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
@@ -232,4 +243,15 @@ foreign key (idJenis_fk) references jenis(idJenis)
 ON DELETE SET NULL ON UPDATE CASCADE;
 
 use automotive_api;
+select * from cars;
+
+create table status (
+	idStatus int(10) primary key not null auto_increment,
+    status varchar(100) not null
+);
+
+insert status(status)
+	value('Need Preview'), ('Approved');
+    
+select * from status;
 select * from cars;
