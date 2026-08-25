@@ -31,6 +31,7 @@ export async function loadCarForEdit(id) {
         document.getElementById('edit_merek').value = car.idMerek_fk;
         document.getElementById('edit_jenis').value = car.idJenis_fk;
         document.getElementById('edit_horse_power').value = car.horse_power;
+        document.getElementById('edit_status').value = car.idStatus_fk;
         openEditModal();
     } catch(error) {
         console.error('Edit Error: ', error);
@@ -52,13 +53,26 @@ export function renderCarList(cars) {
 
         const typeDisplay = car.jenis?.jenis ||  (car.idJenis_fk ? `[ID: ${car.idJenis_fk}]` : 'Not Specified');
 
+        const statusDisplay = car.status?.status || (car.idStatus_fk ? `[ID: ${car.idStatus_fk}]` : 'Not Specified');
+
+        // Determine status color
+        let statusColor = 'yellow'; // default
+        if(statusDisplay.toLowerCase() === 'approved') {
+            statusColor = 'green';
+        } else if(statusDisplay.toLowerCase() === 'needs preview') {
+            statusColor = 'yellow';
+        }
+
         const carItem = document.createElement('div');
         carItem.className = 'car-item';
         carItem.innerHTML = `
-            <h3>${car.nama_mobil}</h3>
-            <p><b>Brand: </b> ${brandDisplay}</p>
-            <p><b>Type: </b> ${typeDisplay}</p>
-            <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
+            <div class="flex-crud">
+                <h3>${car.nama_mobil}</h3>
+                <p><b>Brand: </b> ${brandDisplay}</p>
+                <p><b>Type: </b> ${typeDisplay}</p>
+                <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
+                <p><b>Status: </b><span style="background-color:${statusColor}; color: ${statusColor === 'yellow' ? 'black' : 'white'}; padding: 5px; border-radius: 5px;">${statusDisplay}</span></p>
+            </div>
             <!-- This is for Edit Button in Panel Update Menu -->
             <button class="edit-btn" data-id="${car.idCars}">Edit</button>
             <button class="delete-btn" data-id="${car.idCars}">Delete</button>
