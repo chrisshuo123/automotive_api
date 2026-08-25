@@ -31,6 +31,12 @@ func CreateCarsController(c echo.Context) error {
 			carsRequest.Jenis = &jenis
 		}
 	}
+	if carsRequest.StatusID != nil {
+		var status models.Status
+		if err := configs.DB.First(&status, *carsRequest.StatusID).Error; err == nil {
+			carsRequest.Status = &status
+		}
+	}
 
 	// Checking for MerekID availabality that connects with cars table
 	if carsRequest.MerekID != nil {
@@ -48,6 +54,14 @@ func CreateCarsController(c echo.Context) error {
 		}
 	}
 
+	// Checking for StatusID availabality that connects with cars table
+	if carsRequest.StatusID != nil {
+		var status models.Status
+		if err := configs.DB.First(&status, *carsRequest.StatusID).Error; err != nil {
+			return c.JSON(400, "Invalid status ID")
+		}
+	}
+
 	result := configs.DB.Create(&carsRequest) // Cars Request
 
 	// Reload the car with relationships
@@ -55,6 +69,7 @@ func CreateCarsController(c echo.Context) error {
 	configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&newCar, carsRequest.CarsID)
 
 	if result.Error != nil {
@@ -123,6 +138,7 @@ func UpdateCarController(c echo.Context) error {
 	if err := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&updatedCar, id).Error; err != nil {
 		return c.JSON(500, map[string]interface{}{
 			"status": false,
@@ -154,6 +170,9 @@ func GetCarsController(c echo.Context) error {
 		}).
 		Preload("Jenis", func(db *gorm.DB) *gorm.DB {
 			return db.Select("idJenis, jenis")
+		}).
+		Preload("Status", func(db *gorm.DB) *gorm.DB {
+			return db.Select("idStatus, status")
 		}).
 		Find(&cars)
 		//First(&cars, id)
@@ -194,13 +213,21 @@ func GetCarsController(c echo.Context) error {
 				cars[i].Jenis = &jenis
 			}
 		}
+
+		if cars[i].Status == nil && cars[i].StatusID != nil {
+			var status models.Status
+			if err := configs.DB.First(&status, *cars[i].StatusID).Error; err == nil {
+				cars[i].Status = &status
+			}
+		}
 	}
 
 	// Debug: Log the first car's relationships
 	if len(cars) > 0 {
-		log.Printf("First car relationships - Merek: %+v, Jenis: %+v",
+		log.Printf("First car relationships - Merek: %+v, Jenis: %+v, Status: %+v",
 			cars[0].Merek,
-			cars[0].Jenis)
+			cars[0].Jenis,
+			cars[0].Status)
 	}
 
 	//return c.JSON(http.StatusOK, cars)
@@ -230,6 +257,7 @@ func GetCarController(c echo.Context) error {
 	result := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&car, id) // Use First() for single records
 
 	// result := query.Find(&cars)
@@ -270,7 +298,7 @@ func GetMerekController(c echo.Context) error {
 
 	//return c.JSON(http.StatusOK, cars)
 	return c.JSON(http.StatusOK, models.BaseResponse{
-		Message: "Berhasil menampilkan data",
+		Message: "Berhasil menampilkan data merek",
 		Status:  true,
 		Data:    merek,
 	})
@@ -290,9 +318,29 @@ func GetJenisController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.BaseResponse{
-		Message: "Berhasil menampilkan data",
+		Message: "Berhasil menampilkan data jenis",
 		Status:  true,
 		Data:    jenis,
+	})
+}
+
+func GetStatusController(c echo.Context) error {
+	var status []models.Status
+
+	result := configs.DB.Find(&status)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: "Failed to load status: " + result.Error.Error(),
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Berhasil menampilkan data status",
+		Status:  true,
+		Data:    status,
 	})
 }
 
