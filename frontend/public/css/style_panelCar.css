@@ -151,3 +151,14 @@ button:hover {
 .car-actions {
     margin-top: 10px;
 }
+
+/* === FLEX BOX === */
+.flex-crud {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.flex-crud-button {
+    display: flex;
+    flex-direction: row;
+}
