@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.10
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/labstack/echo/v4 v4.13.4
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.30.0
