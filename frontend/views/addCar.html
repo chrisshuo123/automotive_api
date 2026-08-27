@@ -39,6 +39,11 @@
                 <input type="number" id="horse_power" name="horse_power" required>
             </div>
 
+            <div class="form-group">
+                <label for="image">Image: </label>
+                <input type="file" id="image_car" name="image" accept="image/*" required>
+            </div>
+
             <!-- <div class="form-group">
                 <label for="status">Status: </label>
                 <select id="status" name="status" required>
@@ -92,6 +97,10 @@
                     <option value="">Select a Status</option>
                     <!-- Populated by fetchStatus() -->
                 </select>
+
+                <label>Image:</label>
+                <input type="file" id="edit_image_car" name="image" accept="image/*">
+                <!-- accept="../public/img/*" -->
 
                 <button type="submit">Update</button>
             </form>
