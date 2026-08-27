@@ -11,6 +11,7 @@ export function handleAddCar(e) {
         idJenis_fk: parseInt(document.getElementById('jenis').value),
         horse_power: parseInt(document.getElementById('horse_power').value) || 0,
         // idStatus_fk: parseInt(document.getElementById('status').value)
+        imageCar: document.getElementById('image_car').value,
         idStatus_fk: 1
     };
 
@@ -37,6 +38,7 @@ export function handleUpdateCar(e) {
         idMerek_fk: parseInt(document.getElementById('edit_merek').value),
         idJenis_fk: parseInt(document.getElementById('edit_jenis').value),
         horse_power: parseInt(document.getElementById('edit_horse_power').value),
+        imageCar: document.getElementById('edit_image_car').value,
         idStatus_fk: parseInt(document.getElementById('edit_status').value)
     };
 
