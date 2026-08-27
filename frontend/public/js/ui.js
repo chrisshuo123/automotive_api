@@ -67,15 +67,22 @@ export function renderCarList(cars) {
         carItem.className = 'car-item';
         carItem.innerHTML = `
             <div class="flex-crud">
-                <h3>${car.nama_mobil}</h3>
-                <p><b>Brand: </b> ${brandDisplay}</p>
-                <p><b>Type: </b> ${typeDisplay}</p>
-                <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
-                <p><b>Status: </b><span style="background-color:${statusColor}; color: ${statusColor === 'yellow' ? 'black' : 'white'}; padding: 5px; border-radius: 5px;">${statusDisplay}</span></p>
+                <div style="width: 200px;">
+                    <h3>${car.nama_mobil}</h3>
+                    <p><b>Brand: </b> ${brandDisplay}</p>
+                    <p><b>Type: </b> ${typeDisplay}</p>
+                    <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
+                    <p><b>Status: </b><br><span style="background-color:${statusColor}; color: ${statusColor === 'yellow' ? 'black' : 'white'}; padding: 5px; border-radius: 5px;">${statusDisplay}</span></p>
+                    <!-- This is for Edit Button in Panel Update Menu -->
+                    <div class="flex-crud-button">
+                        <button class="edit-btn" data-id="${car.idCars}">Edit</button>
+                        <button class="delete-btn" data-id="${car.idCars}">Delete</button>
+                    </div>
+                </div>
+                <div>
+                    <img src="../public/img/yaris.jpg" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;">
+                </div>
             </div>
-            <!-- This is for Edit Button in Panel Update Menu -->
-            <button class="edit-btn" data-id="${car.idCars}">Edit</button>
-            <button class="delete-btn" data-id="${car.idCars}">Delete</button>
         `;
         carList.appendChild(carItem);
     });
