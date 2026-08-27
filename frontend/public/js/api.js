@@ -25,20 +25,22 @@ export async function fetchStatus() {
     return response.json();
 }
 
-export async function createCar(data) {
+export async function createCar(formData) { // previous was param data
     const response = await fetch(`${API_BASE}/api/cars`, {
         method: 'POST',
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(data)
+        // headers: DEFAULT_HEADERS,
+        // body: JSON.stringify(data)
+        body: formData  // formData, not JSON.stringify
     });
     return response.json();
 }
 
-export async function updateCar(id, data) {
+export async function updateCar(id, formData) {  // previous the 2nd param was data
     const response = await fetch(`${API_BASE}/api/cars/${id}`, {
         method: 'PUT',
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(data)
+        // headers: DEFAULT_HEADERS,
+        // body: JSON.stringify(data)
+        body: formData
     });
     return response.json();
 }
