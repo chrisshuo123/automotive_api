@@ -80,7 +80,8 @@ export function renderCarList(cars) {
                     </div>
                 </div>
                 <div>
-                    <img src="../public/img/yaris.jpg" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;">
+                    <!-- <img src="../public/img/yaris.jpg" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;"> -->
+                    <img src="../public/img/${car.imageCar}" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;">
                 </div>
             </div>
         `;
