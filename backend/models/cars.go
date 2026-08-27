@@ -7,6 +7,7 @@ type Cars struct {
 	JenisID    *uint  `gorm:"column:idJenis_fk" json:"idJenis_fk" form:"idJenis_fk"`
 	HorsePower uint   `gorm:"column:horse_power" json:"horse_power" form:"horse_power"`
 	StatusID   *uint  `gorm:"column:idStatus_fk" json:"idStatus_fk" form:"idStatus_fk"`
+	ImageCar   string `gorm:"column:imageCar" json:"imageCar" form:"imageCar"`
 
 	// Relationships
 	Merek  *Merek  `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
