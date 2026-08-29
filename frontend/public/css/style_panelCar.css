@@ -53,6 +53,11 @@ button:hover {
     background-color: #45a049;
 }
 
+/* 2nd button */
+button.second-button {
+    background-color: gray;
+}
+
 .message {
     padding: 10px;
     margin: 10px 0;
@@ -161,4 +166,27 @@ button:hover {
 .flex-crud-button {
     display: flex;
     flex-direction: row;
+}
+
+/* Search Box Styling */
+.search-filter-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.search-box {
+    display: flex;
+    flex-direction: row;
+    height: 40px;
+}
+.filter-box {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Clear Button Styling */
+.clearBtn {
+    background-color: red;
+    color: white;
+    border-radius: 5px;
 }
