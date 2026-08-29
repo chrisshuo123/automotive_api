@@ -39,13 +39,55 @@
                 <input type="number" id="horse_power" name="horse_power" required>
             </div>
 
+            <div class="form-group">
+                <label for="image">Image: </label>
+                <input type="file" id="image_car" name="image" accept="image/*" required>
+            </div>
+
+            <!-- <div class="form-group">
+                <label for="status">Status: </label>
+                <select id="status" name="status" required>
+                    <option value="">Select a status</option>
+                    <!-- Options will be populated by Javascript -->
+                <!-- </select>
+            </div> -->
+
             <button type="submit">Submit</button>
         </form>
+        <button type="button" class="second-button" style="margin-top: 10px;">Add Brand</button>
+        <button type="button" class="second-button">Add Type</button>
 
         <div id="message" class="message"></div>
 
         <h2>Car List</h2>
+        <!-- Search and Filter Section -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by car title...">
+                <button onclick="searchCars()">Search</button>
+            </div>
+
+            <div class="filter-box" style="margin-bottom: 75px;">
+                <label for="statusFilter">Status:</label>
+                <!-- <select id="statusFilter" onchange="filterCars()"> -->
+                <select id="statusFilter">
+                    <option value="">All Status</option> <!-- '' and 'all' are treated as "show all" -->
+                    <option value="approved">Approved</option>
+                    <option value="need preview">Need Preview</option>
+                </select>
+            </div>
+
+            <div>
+                <button id="clearBtn" title="Clear All Filters" class="clearBtn">
+                X
+                </button>
+            </div>
+        </div>
+
         <div id="carList"></div>
+        <!-- <div id="noResults" style="display:none;">
+            <div>No Results Found</div>
+        </div> -->
     </div>
 
     <div id="editModal" class="modal" style="display:none;">
@@ -79,10 +121,34 @@
                 <label>Horse Power:</label>
                 <input type="number" id="edit_horse_power" required>
 
+                <label>Status:</label>
+                <select id="edit_status" name="status" required>
+                    <option value="">Select a Status</option>
+                    <!-- Populated by fetchStatus() -->
+                </select>
+
+                <label>Image:</label>
+                <input type="file" id="edit_image_car" name="image" accept="image/*">
+                <!-- accept="../public/img/*" -->
+
                 <button type="submit">Update</button>
             </form>
         </div>
     </div>
+
+    <!-- <div id="addModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Add Brands</h2>
+            <form id="editBrandForm">
+                <p>Add another car brand.  Here's are the list of car brands already registered in the system:</p>
+                <!-- foreach loopings -->
+                <!--<input type="hidden" id="edit_id">
+                <label>Car Name:</label>
+                <input type="text" id="edit_nama_mobil" required>
+            </form>
+        </div>
+    </div> -->
 
     <!-- <script src="../public/js/script.js" defer>
         console.log("Script loaded - API_BASE:", API_BASE);
@@ -91,6 +157,7 @@
         fetchTypes();
         fetchCars();
     </script> -->
+    <script type="module" src="../public/js/script.js"></script>
     <script type="module" src="../public/js/main.js"></script>
 </body>
 </html>

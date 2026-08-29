@@ -59,6 +59,55 @@ alter table cars
 	rename column idMerek_id to idMerek_fk,
     rename column idJenis_id to idJenis_fk;
 
+alter table cars
+	add column idStatus_fk INT(10) after horse_power;
+update cars
+	set idStatus_fk = 2 where idStatus_fk IS NOT NULL; -- Prev set to 'IS NULL'
+alter table cars
+	modify column idStatus_fk int(10) not null;
+    
+alter table cars
+	add constraint idStatus_fk foreign key (idStatus_fk)
+    references status(idStatus);
+    
+-- For the testt car, sets the idStatus_fk to 1 (needs preview)
+update cars
+	set idStatus_fk = 1 where idCars = 51;
+    
+alter table cars
+	add column imageCar varchar(100) after horse_power;
+
+update cars
+SET
+	imageCar = CASE idCars
+		WHEN 1 THEN 'yaris'
+		WHEN 2 THEN 'jazz'
+		WHEN 3 THEN 'swift'
+		WHEN 4 THEN 'mirage'
+		WHEN 5 THEN 'avanza'
+		WHEN 6 THEN 'mobilio'
+		WHEN 7 THEN 'ertiga'
+		WHEN 8 THEN 'expander'
+		WHEN 9 THEN 'rav4'
+        WHEN 10 THEN 'crv'
+		WHEN 11 THEN 'jimny'
+		WHEN 12 THEN 'outlander'
+		WHEN 13 THEN 'alphard'
+		WHEN 14 THEN 'odyssey'
+		WHEN 15 THEN 'every'
+		WHEN 16 THEN 'delica'
+		WHEN 17 THEN 'sienta'
+		WHEN 18 THEN 'freed'
+		WHEN 19 THEN 'spacia'
+		WHEN 20 THEN 'expander'
+		WHEN 47 THEN 'camry'
+		WHEN 49 THEN 'aira-ev'
+		ELSE imageCar
+	END
+WHERE idCars IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,47,49);
+    
+select * from cars;
+
 SHOW CREATE TABLE cars;
 SELECT CONSTRAINT_NAME 
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
@@ -233,3 +282,15 @@ ON DELETE SET NULL ON UPDATE CASCADE;
 
 use automotive_api;
 select * from cars;
+
+create table status (
+	idStatus int(10) primary key not null auto_increment,
+    status varchar(100) not null
+);
+
+insert status(status)
+	value('Need Preview'), ('Approved');
+    
+select * from status;
+select * from cars;
+
