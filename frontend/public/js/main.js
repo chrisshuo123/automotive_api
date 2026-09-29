@@ -1,4 +1,4 @@
-import { fetchBrands, fetchTypes } from './api.js';
+import { fetchBrands, fetchTypes, fetchStatus } from './api.js';
 import { populateSelect, refreshCarList } from './ui.js';
 import { setupModalListeners } from './modal.js';
 import { handleAddCar, handleUpdateCar, handleDeleteCar } from './handlers.js';
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load Initial Data
     refreshCarList();
 
-    // Load Brands & Types for selects
+    // Load Brands, Types, & Status for selects
     fetchBrands()
         .then(apiData => {
             const brands = apiData.data || apiData;
@@ -28,6 +28,14 @@ document.addEventListener('DOMContentLoaded', function() {
             populateSelect('edit_jenis', types, 'jenis', 'idJenis');
         })
         .catch(error => console.error('Types Error: ', error));
+
+    fetchStatus()
+        .then(apiData => {
+            const status = apiData.data || apiData;
+            // populateSelect('status', status, 'status', 'idStatus');
+            populateSelect('edit_status', status, 'status', 'idStatus');
+        })
+        .catch(error => console.error('Status Error: ', error));
 
     // EVENT LISTENERS
     // Add a Car

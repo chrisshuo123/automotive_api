@@ -28,6 +28,7 @@ func InitMigration(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&models.Merek{},
 		&models.Jenis{},
+		&models.Status{},
 		&models.Cars{},
 	)
 

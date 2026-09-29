@@ -1,0 +1,11 @@
+Tuesday, 29 September 2026
+
+For the whole Package, I've recently clear the whole go package using:
+go clean -modcache
+
+Whenever you want to use this again, you can download the package again using:
+go build
+or
+go mod download
+or
+go run .

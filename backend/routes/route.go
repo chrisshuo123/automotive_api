@@ -24,6 +24,7 @@ func InitRoute(e *echo.Echo) {
 	e.GET("/api/cars/:id", controllers.GetCarController) // For single car, outmostly supporting the update func
 	e.GET("/api/brands", controllers.GetMerekController)
 	e.GET("/api/types", controllers.GetJenisController)
+	e.GET("/api/status", controllers.GetStatusController)
 	e.PUT("/api/cars/:id", controllers.UpdateCarController)
 	e.DELETE("api/cars/:id", controllers.DeleteCarController)
 }

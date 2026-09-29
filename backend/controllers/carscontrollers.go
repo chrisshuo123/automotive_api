@@ -4,8 +4,12 @@ import (
 	"automotiveApi/configs"
 	"automotiveApi/models"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -14,62 +18,96 @@ import (
 
 func CreateCarsController(c echo.Context) error {
 	var carsRequest models.Cars
-	if err := c.Bind(&carsRequest); err != nil { // Cars Request
-		return c.JSON(400, err.Error())
+
+	carsRequest.NamaMobil = c.FormValue("nama_mobil")
+
+	if hp, err := strconv.Atoi(c.FormValue("horse_power")); err == nil {
+		carsRequest.HorsePower = uint(hp)
 	}
 
-	// Manually load relationships before saving
-	if carsRequest.MerekID != nil {
-		var merek models.Merek
-		if err := configs.DB.First(&merek, *carsRequest.MerekID).Error; err == nil {
-			carsRequest.Merek = &merek
+	if v := c.FormValue("idMerek_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			carsRequest.MerekID = &uid
 		}
 	}
-	if carsRequest.JenisID != nil {
-		var jenis models.Jenis
-		if err := configs.DB.First(&jenis, *carsRequest.JenisID).Error; err == nil {
-			carsRequest.Jenis = &jenis
+	if v := c.FormValue("idJenis_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			carsRequest.JenisID = &uid
+		}
+	}
+	if v := c.FormValue("idStatus_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			carsRequest.StatusID = &uid
 		}
 	}
 
-	// Checking for MerekID availabality that connects with cars table
+	// Validate foreign keys exits
 	if carsRequest.MerekID != nil {
 		var merek models.Merek
 		if err := configs.DB.First(&merek, *carsRequest.MerekID).Error; err != nil {
-			return c.JSON(400, "Invalid brand ID")
+			return c.JSON(400, models.BaseResponse{
+				Message: "Invalid brand ID",
+				Status:  false,
+			})
 		}
 	}
-
-	// Checking for JenisID availabality that connects with cars table
 	if carsRequest.JenisID != nil {
 		var jenis models.Jenis
 		if err := configs.DB.First(&jenis, *carsRequest.JenisID).Error; err != nil {
-			return c.JSON(400, "Invalid jenis ID")
+			return c.JSON(400, models.BaseResponse{
+				Message: "Invalid jenis ID",
+				Status:  false,
+			})
+		}
+	}
+	if carsRequest.StatusID != nil {
+		var status models.Status
+		if err := configs.DB.First(&status, *carsRequest.StatusID).Error; err != nil {
+			return c.JSON(400, models.BaseResponse{
+				Message: "Invalid Status ID",
+				Status:  false,
+			})
 		}
 	}
 
+	// Optional image upload
+	fileHeader, err := c.FormFile("image")
+	fmt.Println("FormFile err: ", err)
+	if err == nil {
+		fmt.Println("Got file: ", fileHeader.Filename)
+		fileName, err := saveUploadedImage(fileHeader)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: err.Error(),
+				Status:  false,
+			})
+		}
+		carsRequest.ImageCar = fileName
+	}
+
 	result := configs.DB.Create(&carsRequest) // Cars Request
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: result.Error.Error(), Status: false,
+		})
+	}
 
 	// Reload the car with relationships
 	var newCar models.Cars
 	configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&newCar, carsRequest.CarsID)
 
-	if result.Error != nil {
-		//return c.JSON(500, result.Error.Error())
-		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
-			Message: result.Error.Error(),
-			Status:  false,
-			Data:    nil,
-		})
-	}
 	//return c.JSON(http.StatusOK, carsRequest) // Cars Request
 	return c.JSON(http.StatusOK, models.BaseResponse{
 		Message: "Berhasil menambahkan data",
 		Status:  true,
-		Data:    carsRequest,
+		Data:    newCar,
 	})
 }
 
@@ -77,64 +115,113 @@ func UpdateCarController(c echo.Context) error {
 	// Get ID from URL
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(400, map[string]interface{}{
-			"status": "false",
-			"error":  "Invalid ID",
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID", Status: false,
 		})
 	}
 
 	// 1. Get Existing Cars, check if cars exists
 	var car models.Cars
 	if err := configs.DB.First(&car, id).Error; err != nil {
-		return c.JSON(404, map[string]interface{}{
-			"status": false,
-			"error":  "Car not found",
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Car not found", Status: false,
 		})
 	}
 
-	// 2. Bind updated data (partial updates allowed)
-	//var updateData models.Cars
-	/*if err := c.Bind(&car); err != nil {
-		return c.JSON(400, err.Error())
-	}*/
-	if err := c.Bind(&car); err != nil {
-		return c.JSON(400, map[string]interface{}{
-			"status": false,
-			"error":  err.Error(),
-		})
+	if v := c.FormValue("nama_mobil"); v != "" {
+		car.NamaMobil = v
+	}
+	if v := c.FormValue("horse_power"); v != "" {
+		if hp, err := strconv.Atoi(v); err == nil {
+			car.HorsePower = uint(hp)
+		}
+	}
+	if v := c.FormValue("idMerek_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			car.MerekID = &uid
+		}
+	}
+	if v := c.FormValue("idJenis_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			car.JenisID = &uid
+		}
+	}
+	if v := c.FormValue("idStatus_fk"); v != "" {
+		if id, err := strconv.Atoi(v); err == nil {
+			uid := uint(id)
+			car.StatusID = &uid
+		}
+	}
+
+	// Only replace the image if a new file was actually sent
+	fileHeader, err := c.FormFile("image")
+	if err == nil {
+		fileName, err := saveUploadedImage(fileHeader)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: err.Error(),
+				Status:  false,
+			})
+		}
+		car.ImageCar = fileName
 	}
 
 	// 3. Save Changes
 	if err := configs.DB.Save(&car).Error; err != nil {
-		return c.JSON(500, map[string]interface{}{
-			"status": false,
-			"error":  err.Error(),
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: err.Error(), Status: false,
 		})
 	}
-
-	// Update only non-zero fields
-	/*result := configs.DB.Model(&existingCars).Updates(updateData)
-	if result.Error != nil {
-		return c.JSON(500, result.Error.Error())
-	}*/
 
 	// 4. Force Reload with relationships
 	var updatedCar models.Cars
 	if err := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&updatedCar, id).Error; err != nil {
-		return c.JSON(500, map[string]interface{}{
-			"status": false,
-			"error":  err.Error(),
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: err.Error(), Status: false,
 		})
 	}
 
-	return c.JSON(200, map[string]interface{}{
-		"status":  true,
-		"message": "Car updated successfully",
-		"data":    updatedCar, // Directly return the car object
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Car updated successfully", Status: true, Data: updatedCar,
 	})
+}
+
+// saveUploadedImage validates and saves an uploaded image file, returning the generated filename (not the full path) to store in the DB.
+func saveUploadedImage(fileHeader *multipart.FileHeader) (string, error) {
+	src, err := fileHeader.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open uploaded file")
+	}
+	defer src.Close()
+
+	// Randomize the File Name
+	// ext := filepath.Ext(fileHeader.Filename)
+	// fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	// Want to keep the actual file name? here:
+	fileName := fileHeader.Filename
+
+	uploadDir := "../frontend/public/img"
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("failed to create upload directory")
+	}
+
+	dst, err := os.Create(filepath.Join(uploadDir, fileName))
+	if err != nil {
+		return "", fmt.Errorf("failed to save file")
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return "", fmt.Errorf("failed to write file")
+	}
+
+	return fileName, nil
 }
 
 func GetCarsController(c echo.Context) error {
@@ -154,6 +241,9 @@ func GetCarsController(c echo.Context) error {
 		}).
 		Preload("Jenis", func(db *gorm.DB) *gorm.DB {
 			return db.Select("idJenis, jenis")
+		}).
+		Preload("Status", func(db *gorm.DB) *gorm.DB {
+			return db.Select("idStatus, status")
 		}).
 		Find(&cars)
 		//First(&cars, id)
@@ -194,13 +284,21 @@ func GetCarsController(c echo.Context) error {
 				cars[i].Jenis = &jenis
 			}
 		}
+
+		if cars[i].Status == nil && cars[i].StatusID != nil {
+			var status models.Status
+			if err := configs.DB.First(&status, *cars[i].StatusID).Error; err == nil {
+				cars[i].Status = &status
+			}
+		}
 	}
 
 	// Debug: Log the first car's relationships
 	if len(cars) > 0 {
-		log.Printf("First car relationships - Merek: %+v, Jenis: %+v",
+		log.Printf("First car relationships - Merek: %+v, Jenis: %+v, Status: %+v",
 			cars[0].Merek,
-			cars[0].Jenis)
+			cars[0].Jenis,
+			cars[0].Status)
 	}
 
 	//return c.JSON(http.StatusOK, cars)
@@ -230,6 +328,7 @@ func GetCarController(c echo.Context) error {
 	result := configs.DB.
 		Preload("Merek").
 		Preload("Jenis").
+		Preload("Status").
 		First(&car, id) // Use First() for single records
 
 	// result := query.Find(&cars)
@@ -270,7 +369,7 @@ func GetMerekController(c echo.Context) error {
 
 	//return c.JSON(http.StatusOK, cars)
 	return c.JSON(http.StatusOK, models.BaseResponse{
-		Message: "Berhasil menampilkan data",
+		Message: "Berhasil menampilkan data merek",
 		Status:  true,
 		Data:    merek,
 	})
@@ -290,9 +389,29 @@ func GetJenisController(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, models.BaseResponse{
-		Message: "Berhasil menampilkan data",
+		Message: "Berhasil menampilkan data jenis",
 		Status:  true,
 		Data:    jenis,
+	})
+}
+
+func GetStatusController(c echo.Context) error {
+	var status []models.Status
+
+	result := configs.DB.Find(&status)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+			Message: "Failed to load status: " + result.Error.Error(),
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Berhasil menampilkan data status",
+		Status:  true,
+		Data:    status,
 	})
 }
 

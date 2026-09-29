@@ -1,441 +1,216 @@
-// Global configuration (only what's needed)
-const API_BASE = 'http://localhost:8000';
-const DEFAULT_HEADERS = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-};
-
-console.log("Before DOMContentLoaded"); // Debug 1
+import { renderCarList, getCars, refreshCarList } from "./ui.js";
+import { STATUS } from "./config.js";
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded!"); // Debug 2
-    fetchBrands();
-    fetchTypes();
-    fetchCars();
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const clearBtn = document.getElementById("clearBtn");
 
-    // === 1 - UPDATE MODAL CONTROL FUNCTIONS ===
-    function OpenEditModal() {
-        document.getElementById('editModal').style.display = 'flex';
-    }
-    function CloseEditModal() {
-        document.getElementById('editModal').style.display = 'none';
-    }
+    console.log('DOM loaded - initializing filters'); // Debug log
 
-    // Close Modal when clicking X or outside
-    document.querySelector('.close-modal').addEventListener('click', CloseEditModal);
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('editModal');
-        const modalContent = modal?.querySelector('modal-content');
+    function filterData() {
+        console.log('=== filterData called ==='); // Debug log
 
-        // Close if clicking the background overlay, NOT the content
-        if(e.target === modal) {
-            CloseEditModal();
-        }
-    })
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
 
-    // Modify your loadCarForEdit function to open the modal
-    function loadCarForEdit(id) {
-        fetch(`${API_BASE}/api/cars/${id}`)
-            .then(response => {
-                if(!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(response => { // car => {...
-                // Handle both response formats
-                const car = response.data || response;
+        console.log('Search term: ', `${searchTerm}`);  // Debug log
+        console.log('Search term length: ', searchTerm.length);  // Debug log
+        console.log('Status filter value: ', `"${statusValue}"`);  // Debug log
+        console.log('STATUS.APPROVED from config: ', `"${STATUS.APPROVED}"`);
+        console.log('STATUS.NEED_PREVIEW from config: ', `"${STATUS.NEED_PREVIEW}"`);
+        console.log('Search input value: ', `${searchInput}`);  // Debug log
+        console.log('Is search empty? ', searchTerm === '');   // Debug log
+        console.log('Is status all or empty?', statusValue === '' || statusValue === 'all');  // Debug log
 
-                if (!car || !car.idCars) {
-                    throw new Error("Invalid car data recieved");
-                }
-                console.log("Car Data: ", car); // Debug log
+        // Check if the dropdown value matches our STATUS constants
+        console.log('Does dropdown value match STATUS.APPROVED? ', statusValue === STATUS.APPROVED);
+        console.log('Does dropdown value match STATUS.NEED_PREVIEW? ', statusValue === STATUS.NEED_PREVIEW);
 
-                document.getElementById('edit_id').value = car.idCars;
-                document.getElementById('edit_nama_mobil').value = car.nama_mobil;
-                document.getElementById('edit_merek').value = car.idMerek_fk;
-                document.getElementById('edit_jenis').value = car.idJenis_fk;
-                document.getElementById('edit_horse_power').value = car.horse_power;
-            
-                OpenEditModal(); // Show the modal after loading data
-            })
-            .catch(error => {
-                console.error("Edit error:", error);
-                alert("Failed to load car: " + error.message);
-            });
-    }
-    
-    // Your form submit handler...
-    /*const fetchOptions = {
-        credentials: 'include',  // This 'credentials' only makes the CORS more stricter, hard to serve DB to frontend.
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
-    };*/
+        // const cars = getCars();  // Get the stored cars data (already flattened)
+        // ganti ke allCars
+        const allCars = getCars();
+        console.log('Number of cars Available: ', allCars?.length); // Debug log
 
-    // === 3 - DELETE CONTROL FUNCTIONS ===
+        // if(cars && cars.length > 0) {
+        //     console.log('First car sample:', {
+        //         name: cars[0].nama_mobil,
+        //         status: cars[0].statusDisplay
+        //     });
+        // }
 
-    function deleteCar(id) {
-        if(!confirm('Are you sure you want to delete this car?')) {
+        if(!allCars || allCars.length === 0) {
+            console.log('No cars data available'); // Debug log
+            renderCarList([]);
             return;
         }
 
-        fetch(`${API_BASE}/api/cars/${id}`, {
-            method: 'DELETE',
-            headers: DEFAULT_HEADERS
-        })
-        .then(response => {
-            if(!response.ok) throw new error(`HTTP Error! Status: ${response.status}`);
-            return response.json();
-        })
-        .then(apiData => {
-            showMessage('Car deleted successfully!', 'success');
-            fetchCars(); // Refresh the list
-        })
-        .catch(error => {
-            console.error('Delete error: ', error);
-            showMessage('Failed to delete car, error message: ' + error.message, ' error');
-        });
-    }
+        // Log all car names to see what we're searching
+        console.log('All car names: ', allCars.map(c => c.nama_mobil));
 
-    // Update fetchCars() to handle data.data
-    function fetchCars() {
-        fetch(`${API_BASE}/api/cars?_expand=merek&_expand=jenis`, { // Include related data
-            headers: DEFAULT_HEADERS // No Credentials
-        })
-        /*.then(response => response.json())*/
-        .then(response => {
-            if(!response.ok) {
-                throw new Error(`Network Response was not ok. HTTP ${response.status}`);
-            }
-            return response.json().then(data => {   // Properly parse JSON
-                console.log("FULL API RESPONSE: ", data);   // Debug raw data
-                return data;
-            });
-        })
-        .then(apiData => {
-            console.log("Raw API response:", apiData);
-            const cars = apiData.data || apiData;
-            const carList = document.getElementById('carList');
-            //console.log('Car Data: ', apiData);
-            carList.innerHTML = '';
-
-            // Check for data.data structure
-            /*if(data.length === 0) {*/
-            if(!apiData.data || apiData.data.length === 0) {
-                carList.innerHTML = '<p>No cars found.</p>';
-                return;
-            }
-
-            // Use data.data instead of data
-            /* data.forEach(car => { */
-            cars.forEach(car => {
-                // Safely extract brand and type names
-                const brandDisplay = car.merek
-                    ? car.merek.merek
-                    : (car.idMerek_fk ? `[ID: ${car.idMerek_fk}]` : 'Not Specified');
-                    //: `[ID:${car.merek}]`; // 👈 Show ID if name missing (prev changed idMerek_fk to merek)
-
-                const typeDisplay = car.jenis
-                    ? car.jenis.jenis
-                    : (car.idJenis_fk ? `[ID: ${car.idJenis_fk}]` : 'Not Specified');
-                    //: `[ID:${car.jenis}]`; // 👈 Show ID if name missing (prev changed idJenis_fk to jenis)
-
-                const carItem = document.createElement('div');
-                carItem.className = 'car-item';
-                carItem.innerHTML = `
-                    <h3>${car.nama_mobil}</h3>
-                    <p><b>Brand: </b> ${brandDisplay}</p>
-                    <p><b>Type: </b> ${typeDisplay}</p>
-                    <p><b>Horse Power: </b> ${car.horse_power ?? 'N/A'}</p>
-                    <!-- This is for Edit Button in Panel Update Menu -->
-                    <button class="edit-btn" data-id="${car.idCars}">Edit</button>
-                    <button class="delete-btn" data-id="${car.idCars}">Delete</button>
-                `;
-                carList.appendChild(carItem);
-            });
-
-            // Add Event Listeners for all Edit Buttons
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const carId = btn.getAttribute('data-id');
-                    loadCarForEdit(carId); // Your existing edit function
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Error fetching cars. Car list Error: ', error);
-            document.getElementById('carList').innerHTML = `
-                <div class="error">Error loading cars: ${error.message}</div>
-            `;
-        });
-    }
-
-    // Update fetchBrands() to handle data.data
-    function fetchBrands() {
-        console.log("Fetching brands from:", `${API_BASE}/api/brands`);
-        console.log("1. Starting brands fetch...") // Debug 1
-        
-        fetch(`${API_BASE}/api/brands`, {
-            headers: DEFAULT_HEADERS // No Credentials!
-        })
-        /*.then(response => response.json())*/
-        .then(response => {
-            console.log("2. Brands response received. Status: ", response); // Debug 2
-            if(!response.ok) {
-                throw new Error(`Network Error, status: ${response.status}`);
-            }
-            return response.json().then(apiData => {
-                console.log("3. Parsed JSON Data: ", apiData);
-                return apiData;
-            });
-        })
-        .then(apiData => {
-            console.log('4. Processing Brands JSON Data: ', apiData);
-            
-            // Check if apiData.data exists, fallback to data if not
-            //const brands = apiData.data || apiData;
-            const brands = apiData.data || apiData;
-            const addSelect = document.getElementById('merek');
-            const editSelect = document.getElementById('edit_merek');
-            
-            // Clear existing options
-            [addSelect, editSelect].forEach(select => {
-                select.innerHTML = '<option value="">Select a brand</option>';
-            });
-
-            if(!brands || !Array.isArray(brands)) {
-                throw new Error("Invalid brands data format");
-            }
-            
-            if(brands.length === 0) {
-                console.warn("No brands recieved from API");
-                return;
-            }
-
-            // Add new options
-            /*data.forEach(brand => { */
-            brands.forEach(brand => {
-                console.log("5. Adding brand: ", brand);
-                
-                const option = new Option(brand.merek, brand.idMerek);
-                const editOption = new Option(brand.merek, brand.idMerek);
-
-                addSelect.add(option);
-                editSelect.add(editOption);
-                
-                // select.add(new Option(brand.merek, brand.idMerek));
-                
-                // Bisa pakai yang text, value, defaultSelected, dan selected
-                /*select.add(new Option(
-                    brand.merek,    // text
-                    brand.idMerek,  // value
-                    false,          // defaultSelected
-                    false           // selected
-                )); */
-
-                // Atau pakai yang const option
-                /*const option = document.createElement('option');
-                option.value = brand.idMerek;
-                option.textContent = brand.merek;
-                select.appendChild(option);*/
-            });
-        })
-        .catch(error => {
-            console.error('6. Failed fetch brands: ', error);
-            const selects = document.querySelectorAll('#merek', "#edit_merek");
-            //const select = document.getElementById('merek');
-            selects.forEach(select => {
-                select.innerHTML = `
-                    <option value="">Error loading brands (check console)</option>
-                `;
-            });
-        });
-    }
-
-    // Update fetchTypes() to handle data.data
-    function fetchTypes() {
-        console.log("Fetching types from:", `${API_BASE}/api/types`);
-        console.log("1. Starting types fetch...") // Debug 1
-
-        fetch(`${API_BASE}/api/types`, {
-            headers: DEFAULT_HEADERS // No Credentials!
-        })
-        /*.then(response => response.json())*/
-        .then(response => {
-            console.log("2. Types response received. Status: ", response); // Debug 2
-            if(!response.ok) {
-                throw new Error(`Network Response was not ok`);
-            }
-            return response.json().then(apiData => {
-                console.log("3. Parsed JSON Data: ", apiData);
-                return apiData;
-            });
-        })
-        .then(apiData => {
-            console.log('4. Processing Types JSON Data: ', apiData);
-            //const select = document.getElementById('jenis');
-            const addSelect = document.getElementById('jenis');
-            const editSelect = document.getElementById('edit_jenis');
-
-            // Clear existing options
-            [addSelect, editSelect].forEach(select => {
-                select.innerHTML = '<option value="">Select a types</option>';
-            });
-            
-            // Check if apiData.data exists, fallback to data if not
-            const types = apiData.data || apiData;
-
-            if(!types || !Array.isArray(types)) {
-                throw new Error("Invalid types data format");
-            }
-
-            if(types.length === 0) {
-                console.warn("No types recieved from API");
-                return;
-            }
-            
-            types.forEach(type => {
-                console.log("5. Adding type: ", type);
-                
-                const option = new Option(type.jenis, type.idJenis);
-                const editOption = new Option(type.jenis, type.idJenis);
-                
-                addSelect.add(option);
-                editSelect.add(editOption);
-
-                //select.add(new Option(type.jenis, type.idJenis));
-            });
-        })
-        .catch(error => {
-            console.error('6. Failed fetch types: ', error);
-            const selects = document.querySelectorAll('#jenis', '#edit_jenis');
-            //const select = document.getElementById('jenis');
-            selects.forEach(select => {
-                select.innerHTML = `
-                    <option value="">Error loading jenis (check console)</option>
-                `;
-            })
-        });
-    }
-
-    function showMessage(message, type) {
-        const messageDiv = document.getElementById('message');
-        messageDiv.textContent = message;
-        messageDiv.className = type;
-
-        // Auto-hide for 5 seconds
-        setTimeout(() => {
-            messageDiv.textContent = '';
-            messageDiv.className = '';
-        }, 5000);
-    }
-
-    //  === 1 - CREATE CAR EXECUTION ===
-    // Update form submission to handle response structure (ADD CARS)
-    document.getElementById('carForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = {  // changed idMerek_fk to merek, and idJenis_fk to jenis
-            nama_mobil: document.getElementById('nama_mobil').value,
-            idMerek_fk: parseInt(document.getElementById('merek').value), // Match Go struct
-            idJenis_fk: parseInt(document.getElementById('jenis').value), // Match Go struct
-            horse_power: parseInt(document.getElementById('horse_power').value) || 0 // Force number
-        };
-
-        console.log("Form Submission Data:", formData); // 👈 Add this
-
-        fetch(`${API_BASE}/api/cars`, {
-            method:'POST',
-            headers: DEFAULT_HEADERS,
-            body: JSON.stringify(formData)
-        })
-        /*.then(response => response.json())*/
-        .then(response => {
-            console.log('API Response: ', response);
-            if(!response.ok) {
-                throw new Error(`HTTP Error! Status ${response.status}`);
-            }
-            // Verify content type is JSON
-            const contentType = response.headers.get('content-type');
-            if(!contentType || !contentType.includes('application/json')) {
-                throw new TypeError("Response isn't JSON");
-            }
-            return response.json();
-        })
-        .then(apiData => {
-            // 👇 Add debug checks HERE (before processing cars)
-            // (note: changed idMerek_fk to merek, and idJenis_fk to jenis)
-            console.log("FULL RESPONSE: ", apiData);
-            if(apiData.data?.merek === null && apiData.data?.idMerek_fk) {
-                console.warn("Brand ID Exists but null: ", apiData.data.idMerek_fk);
-            }
-            if(apiData.data?.jenis === null && apiData.data?.idJenis_fk) {
-                console.warn("Jenis ID Exists but null: ", apiData.data.idJenis_fk);
-            }
-
-            console.log("RAW CAR DATA: ", JSON.stringify(apiData, null, 2));
-            const cars = apiData.data || apiData;
-
-            document.getElementById('message').innerText = cars;
-
-            if(apiData.status) {
-                showMessage('Car Added Successfully!', 'success');
-                document.getElementById('carForm').reset();
-                fetchCars(); // Refresh the car list
-            } else {
-                showMessage('Failed to add car: ' + apiData.message, 'error');
-            }
-        })
-        .catch(error => {
-            showMessage('Error adding car: ' + Error.message, 'error');
-        });
-    });
-
-    //  === 2 - HANDLE FORM SUBMISSION (UPDATE CARS) ===
-    document.getElementById('editCarForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = {
-            nama_mobil : document.getElementById('edit_nama_mobil').value,
-            idMerek_fk : parseInt(document.getElementById('edit_merek').value),
-            idJenis_fk : parseInt(document.getElementById('edit_jenis').value),
-            horse_power : parseInt(document.getElementById('edit_horse_power').value)
-        };
-
-        const id = document.getElementById('edit_id').value;
-        
-        fetch(`${API_BASE}/api/cars/${id}`, {
-            method : "PUT",
-            headers : DEFAULT_HEADERS,
-            body: JSON.stringify(formData)
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(updatedCar => { // updatedCar is now the full car object
-            console.log("Update car: ", updatedCar);
-            console.log("Updated car with relationships: ", updatedCar.merek);
-            document.getElementById('editModal').style.display = 'none';
-            fetchCars(); // Refresh the list
-            showMessage('Car updated successfully!', 'success');
-        })
-        .catch(error => {
-            console.log("Update Failed: ", error);
-            showMessage('Update failed: ' + error, 'error');
-        });
-    });
-
-    // === 3 - DELETE CARS EXECUTION ===
-    document.addEventListener('click', function(e) {
-        if(e.target.classList.contains('delete-btn')) {
-            const carId = e.target.getAttribute('data-id');
-            deleteCar(carId);
+        // If search is empty AND status is "all" or empty, show all cars
+        if (searchTerm === '' && (statusValue === '' || statusValue === 'all')) {
+            console.log('Showing all cars (no filters) - count: ', allCars.length);
+            renderCarList(allCars); // Pass the FULL dataset
+            return;
         }
-    });
+
+        // Otherwise, apply filters to the FULL dataset
+        console.log('Applying filters to all', allCars.length, 'cars...');
+        console.log('Searching for: ', `"${searchTerm}"`);
+
+        const filteredResults = allCars.filter((car) => {
+            // console.log('Checking car: ', car.nama_mobil, 'Status: ', car.statusDisplay); // Debug log
+            const carNameLower = car.nama_mobil.toLowerCase();
+            const carStatusLower = car.statusDisplay ? car.statusDisplay.toLowerCase() : '';
+
+            // Search Filter - now using flattened statusDisplay
+            let matchesSearch = true;
+            if(searchTerm !== '') {
+                matchesSearch = carNameLower.includes(searchTerm) ||
+                                carStatusLower.includes(searchTerm);
+                
+                // Debug: Log cars that might match, because previously I use ' searchTerm === '' ' that cause input search that don't exist in the Car List kept showing LOL XD
+                // if(searchTerm === 'zv') {  
+                //     console.log(`Checking "${car.nama_mobil}":`, {
+                //         name: carNameLower,
+                //         includesZV: carNameLower.includes('zv'),
+                //         status: carStatusLower,
+                //         includesStatus: carStatusLower.includes('zv')
+                //     });
+                // }
+            }
+            
+            // Status Filter - use flattened statusDisplay
+            // empty or "all" means show all
+            let matchesStatus = true;
+            if(statusValue !== '' && statusValue !== 'all') {
+                matchesStatus = carStatusLower === statusValue.toLowerCase();
+            
+                // Debug for first few cars
+                if(allCars.indexOf(car) < 3) {
+                    console.log(`Car "${car.nama_mobil}", Status: "${carStatusLower}"`);
+                    console.log(`  Filter expecting: "${statusValue.toLowerCase()}"`);
+                    console.log(`  Match? ${matchesStatus}`);
+                }
+            }
+
+            return matchesSearch && matchesStatus;
+            // const result = matchesSearch && matchesStatus;
+            // const matchesStatus = statusValue === '' ||
+            //     statusValue === 'all' ||
+            //     carStatusLower === statusValue.toLowerCase();
+
+            // console.log(`Car: ${car.nama_mobil}, matchesSearch: ${matchesSearch}, matchesStatus: ${matchesStatus}`);  // Debug log
+
+            // Change Debug Log above to this below
+            // Log only first 5 cars to avoid spam
+            // if (cars.indexOf(car) < 5) {
+            //     console.log(`Car ${cars.indexOf(car) + 1}:`, {
+            //         nama: car.nama_mobil,
+            //         status: car.statusDisplay,
+            //         matchesSearch,
+            //         matchesStatus,
+            //         willInclude: matchesSearch && matchesStatus
+            //     });
+            // }
+
+            // Log details for cars that might have "z" and "zv"
+            if(searchTerm === 'z' || searchTerm === 'zv') {
+                if(carNameLower.includes('z') || carNameLower.includes('zv')) {
+                    console.log(`Car "${car.nama_mobil}" matches: `, {
+                        matchesSearch,
+                        matchesStatus,
+                        result
+                    });
+                }
+            }
+
+            return result;
+        });
+
+        console.log('Filtered results count: ', filteredResults.length);  // Debug log
+
+        if (filteredResults.length > 0) {
+            console.log('First filtered car: ', {
+                name: filteredResults[0].nama_mobil,
+                status: filteredResults[0].statusDisplay
+            });
+        } else if(filteredResults === 0) {
+            console.log('No cars matched the filters');
+            // Log what we searched for
+            console.log('  Search term was: ', `"${searchTerm}"`);
+            // console.log('Avalable car names: ', cars.map(c => c.nama_mobil));
+            console.log('  Status filter was: ', `"${statusValue}"`);
+            console.log('  STATUS.APPROVED is: ', `"${STATUS.APPROVED}"`);
+            console.log('  STATUS.NEED_PREVIEW is: ', `"${STATUS.NEED_PREVIEW}"`);
+        } else {
+            console.log(`Found ${filteredResults.length} cars matching the filters`);
+            filteredResults.forEach((car, index) => {
+                if (index < 5) {   // show first 5 matches
+                    console.log(`  ${index + 1}. ${car.nama_mobil} - status: ${car.statusDisplay}`);
+                }
+            });
+        }
+        
+        // console.log('Filtered data: ', filteredResults);  // Debug log, change with the debug log above.
+        
+        // Render the filtered results
+        renderCarList(filteredResults); // Recently filterData
+        console.log('=== FILTER DATA COMPLETE ===\n');
+    }
+
+    // Add event listeners
+    if (searchInput) {
+        console.log('Search input found - adding listener'); // Debug log
+        // 'input' event triggers on every keystroke (including backspace/delete)
+        
+        searchInput.addEventListener('input', function(e) {
+            console.log('Input event triggered.  Current value: ', `"${this.value}"`);
+            filterData();
+        }); // Real-time search on input
+
+        // 'keypress' for Enter key
+        searchInput.addEventListener('keypress', function(e) {
+            if(e.key === 'enter') {
+                e.preventDefault();
+                console.log('Enter key pressed. Current value: ', `"${this.value}"`);
+                filterData();
+            }
+        });
+
+        searchInput.addEventListener('search', function(e) {
+            console.log('Search event triggered (x button clicked).  Current value: ', `"${this.value}"`);
+            if(this.value === '') {
+                filterData();
+            }
+        });
+    } else {
+        console.log('Search input NOT found'); // Debug log
+    }
+    
+    if (statusFilter) {
+        console.log('Status filter found - adding listener'); // Debug log
+        statusFilter.addEventListener('change', function(e) {
+            console.log('Status changed to: ', this.value);
+            filterData();
+        });
+    } else {
+        console.log('Status filter NOT found'); // Debug log
+    }
+
+    // Clear button functionality
+    if (clearBtn) {
+        console.log('Clear button found - adding listener');
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            statusFilter.value = ''; // or 'all' depending on your HTML
+            console.log('Filters cleared. Search value: ', `"${searchInput.value}"`);
+            filterData(); // Trigger filter to show all cars
+        });
+    }
+
+    // Initial Load - use refreshCarList to fetch and flatten data
+    console.log('Calling refreshCarList for initial load'); // Debug log
+    refreshCarList();
 });
-
-console.log("After DOMContentLoaded"); // Debug 3
-

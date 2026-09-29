@@ -19,20 +19,28 @@ export async function fetchTypes() {
     return response.json();
 }
 
-export async function createCar(data) {
+export async function fetchStatus() {
+    const response = await fetch(`${API_BASE}/api/status`, {headers: DEFAULT_HEADERS});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+}
+
+export async function createCar(formData) { // previous was param data
     const response = await fetch(`${API_BASE}/api/cars`, {
         method: 'POST',
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(data)
+        // headers: DEFAULT_HEADERS,
+        // body: JSON.stringify(data)
+        body: formData  // formData, not JSON.stringify
     });
     return response.json();
 }
 
-export async function updateCar(id, data) {
+export async function updateCar(id, formData) {  // previous the 2nd param was data
     const response = await fetch(`${API_BASE}/api/cars/${id}`, {
         method: 'PUT',
-        headers: DEFAULT_HEADERS,
-        body: JSON.stringify(data)
+        // headers: DEFAULT_HEADERS,
+        // body: JSON.stringify(data)
+        body: formData
     });
     return response.json();
 }
