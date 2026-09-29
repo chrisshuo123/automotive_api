@@ -136,19 +136,21 @@
         </div>
     </div>
 
-    <!-- <div id="addModal" class="modal" style="display:none">
+    <div id="universalModal" class="modal" style="display:none">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>Add Brands</h2>
-            <form id="editBrandForm">
-                <p>Add another car brand.  Here's are the list of car brands already registered in the system:</p>
+            <h2 id="modalTitle"></h2>
+            <form id="universalForm">
+                <div id="modalFieldsContainer"></div>
+                <!-- <p>Add another car brand.  Here's are the list of car brands already registered in the system:</p> -->
                 <!-- foreach loopings -->
                 <!--<input type="hidden" id="edit_id">
                 <label>Car Name:</label>
-                <input type="text" id="edit_nama_mobil" required>
+                <input type="text" id="edit_nama_mobil" required>-->
+                <button type="submit">Save</button>
             </form>
         </div>
-    </div> -->
+    </div>
 
     <!-- <script src="../public/js/script.js" defer>
         console.log("Script loaded - API_BASE:", API_BASE);
