@@ -52,10 +52,12 @@ In VSCode, on the left-side toolbar go to Extension Toolbar (Shortand 'CTRL + X'
 **In VSCode, open the terminal below the screen (Shorthand is "CTRL + `") and run the server _using Golang_, input in the terminal as follow:** <br>
 1. "cd backend" <br>
 2. "go run main.go" <br>
+
 If correct, it will show "ECHO" with huge text _(DISC: if there's error written in Database, just ignore it)_.  Until here, the GORM Server already runs well.<br>
 **NOTE:** If Golang contains error, then this is the solution. Go to terminal in VSCode: <br>
 1. cd backend <br>
 2. go mod tidy <br>
+
 _The purpose of "go mod tidy" is to import package '.go' thats essential in running the server through Github Community so Golang can run smoothly_.<br>
 Testing the Front-End Website Page under Golang's Server will be discussed below on PART 3.
 #### BONUS PART: the Postman API
