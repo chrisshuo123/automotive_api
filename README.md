@@ -60,15 +60,15 @@ If correct, it will show "ECHO" with huge text _(DISC: if there's error written 
 
 _The purpose of "go mod tidy" is to import package '.go' thats essential in running the server through Github Community so Golang can run smoothly_.<br>
 Testing the Front-End Website Page under Golang's Server will be discussed below on PART 3.
-#### BONUS PART: the Postman API
+### BONUS PART: the Postman API
 Proceed by creating a new file, select pointer type _(such as GET or PUT)_, and then copy & paste the link provided below into Postman's URL column: <br>
-👉 Pointer GET Cars: <br>
+👉 **Pointer GET Cars:** <br>
 http://localhost:8000/api/cars <br>
-👉 Pointer GET brands: <br>
+👉 **Pointer GET brands:** <br>
 http://localhost:8000/api/brands <br>
-👉 Pointer GET types: <br>
+👉 **Pointer GET types:** <br>
 http://localhost:8000/api/types <br>
-👉 Pointer PUT Update Cars: <br>
+👉 **Pointer PUT Update Cars:** <br>
 http://localhost:8000/api/cars/_id_ <br>
 <br>
 **NOTE:** The aim of this Bonus session is to showcase my API Pointer Skill, when I undergo a Golang Certification on creating a minimum of 3 API Pointers.<br>
@@ -76,8 +76,8 @@ http://localhost:8000/api/cars/_id_ <br>
 
 ## PART 3: Test The Front-End HTML Website
 There's still 2 pages, consists of index.html (main public user page), and addCar.html (an admin CRUD Page to manage Car Lists).  **As long as the server is running, please proceed to _frontend > views_ directory, then:** <br>
-1. Right click 'index.html' on the left side bar of the VSCode, click 'Open with live server' to make API Database list appeared in the HTML Website. <br>
-2. Right click 'addCar.html' on the left side bar of the VSCode, click 'Open with live server', this is the CRUD Panel where user can create, update, delete API Database via HTML Frontend. <br>
+1. Right click **'index.html'** on the left side bar of the VSCode, click 'Open with live server' to make API Database list appeared in the HTML Website. <br>
+2. Right click **'addCar.html'** on the left side bar of the VSCode, click 'Open with live server', this is the CRUD Panel where user can create, update, delete API Database via HTML Frontend. <br>
 
 
 
