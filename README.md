@@ -53,7 +53,6 @@ In VSCode, on the left-side toolbar go to Extension Toolbar (Shortand 'CTRL + X'
 1. "cd backend" <br>
 2. "go run main.go" <br>
 If correct, it will show "ECHO" with huge text _(DISC: if there's error written in Database, just ignore it)_.  Until here, the GORM Server already runs well.<br>
-<br>
 **NOTE:** If Golang contains error, then this is the solution. Go to terminal in VSCode: <br>
 1. cd backend <br>
 2. go mod tidy <br>
