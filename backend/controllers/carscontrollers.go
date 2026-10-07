@@ -3,6 +3,8 @@ package controllers
 import (
 	"automotiveApi/configs"
 	"automotiveApi/models"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +18,33 @@ import (
 	"gorm.io/gorm"
 )
 
+func saveUploadedImageWithName(fileHeader *multipart.FileHeader, fileName string) error {
+	src, err := fileHeader.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Cari root project dari working directory saat ini
+	wd, _ := os.Getwd()
+	// File Path Upload Directory
+	uploadDir := filepath.Join(wd, "..", "frontend", "public", "img")
+
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return fmt.Errorf("Failed to create upload dir: %w", err)
+	}
+
+	dstPath := filepath.Join(uploadDir, fileName)
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
+}
+
 func CreateCarsController(c echo.Context) error {
 	var carsRequest models.Cars
 
@@ -25,19 +54,19 @@ func CreateCarsController(c echo.Context) error {
 		carsRequest.HorsePower = uint(hp)
 	}
 
-	if v := c.FormValue("idMerek_fk"); v != "" {
+	if v := c.FormValue("idmerek_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.MerekID = &uid
 		}
 	}
-	if v := c.FormValue("idJenis_fk"); v != "" {
+	if v := c.FormValue("idjenis_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.JenisID = &uid
 		}
 	}
-	if v := c.FormValue("idStatus_fk"); v != "" {
+	if v := c.FormValue("idstatus_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.StatusID = &uid
@@ -78,8 +107,27 @@ func CreateCarsController(c echo.Context) error {
 	fmt.Println("FormFile err: ", err)
 	if err == nil {
 		fmt.Println("Got file: ", fileHeader.Filename)
-		fileName, err := saveUploadedImage(fileHeader)
-		if err != nil {
+
+		// Ambil extension dari file asli (mis. ".jpg")
+		ext := filepath.Ext(fileHeader.Filename)
+
+		// Generate 7 byte random: "car_123124124qsafwr" jadi 14 karakter hex
+		b := make([]byte, 7) // 7 byte x 2 = 14 char hex
+		if _, err := rand.Read(b); err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: "Failed to generate random name",
+				Status:  false,
+			})
+		}
+
+		// Gabungkan: car_ + hex + ext
+		fileName := "car_" + hex.EncodeToString(b) + ext
+		// Hasil: car_6a9bdbc37fbfb.jpg
+
+		fmt.Println("Generated filename: ", fileName)
+
+		// Simpan file dengan nama baru
+		if err := saveUploadedImageWithName(fileHeader, fileName); err != nil {
 			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
 				Message: err.Error(),
 				Status:  false,
@@ -136,19 +184,19 @@ func UpdateCarController(c echo.Context) error {
 			car.HorsePower = uint(hp)
 		}
 	}
-	if v := c.FormValue("idMerek_fk"); v != "" {
+	if v := c.FormValue("idmerek_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.MerekID = &uid
 		}
 	}
-	if v := c.FormValue("idJenis_fk"); v != "" {
+	if v := c.FormValue("idjenis_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.JenisID = &uid
 		}
 	}
-	if v := c.FormValue("idStatus_fk"); v != "" {
+	if v := c.FormValue("idstatus_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.StatusID = &uid
@@ -156,7 +204,7 @@ func UpdateCarController(c echo.Context) error {
 	}
 
 	// Only replace the image if a new file was actually sent
-	fileHeader, err := c.FormFile("image")
+	fileHeader, err := c.FormFile("nama_foto") // replace "image" to "nama_foto"
 	if err == nil {
 		fileName, err := saveUploadedImage(fileHeader)
 		if err != nil {
@@ -225,6 +273,10 @@ func saveUploadedImage(fileHeader *multipart.FileHeader) (string, error) {
 }
 
 func GetCarsController(c echo.Context) error {
+	var count int64
+	configs.DB.Table("cars").Count(&count)
+	fmt.Println("Total rows in cars table: ", count)
+
 	var cars []models.Cars
 
 	// Set Response Header
@@ -237,13 +289,13 @@ func GetCarsController(c echo.Context) error {
 	// First load cars with relationships
 	result := configs.DB.
 		Preload("Merek", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idMerek, merek") // Only load necessary fields
+			return db.Select("idmerek, namamerek") // Only load necessary fields
 		}).
 		Preload("Jenis", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idJenis, jenis")
+			return db.Select("idjenis, namajenis")
 		}).
 		Preload("Status", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idStatus, status")
+			return db.Select("idstatus, namastatus")
 		}).
 		Find(&cars)
 		//First(&cars, id)
@@ -319,6 +371,8 @@ func GetCarController(c echo.Context) error {
 		})
 	}
 
+	log.Printf("🔵 GetCarController: id=%d", id)
+
 	// var car []models.Cars // Single record, not slice
 	var car models.Cars // Single struct, NOT slice
 
@@ -329,11 +383,18 @@ func GetCarController(c echo.Context) error {
 		Preload("Merek").
 		Preload("Jenis").
 		Preload("Status").
-		First(&car, id) // Use First() for single records
+		Where("idcars = ?", id).
+		First(&car) // Use First() for single records
+
+	log.Printf("🔵 Query error: %v", result.Error)
+	log.Printf("🔵 Rows affected: %d", result.RowsAffected)
+	log.Printf("🔵 Car: %+v", car)
 
 	// result := query.Find(&cars)
 
 	if result.Error != nil {
+		log.Println("GetCar error: ", result.Error)
+		log.Println("Looking for idcars: ", id)
 		// return c.JSON(404, map[string]string{"error": "Car not found"})
 		return c.JSON(http.StatusNotFound, models.BaseResponse{
 			Message: "Cars not found",
@@ -349,7 +410,7 @@ func GetCarController(c echo.Context) error {
 	})
 }
 
-func GetMerekController(c echo.Context) error {
+func GetMereksController(c echo.Context) error {
 	var merek []models.Merek
 
 	// Set Response Header
@@ -375,7 +436,41 @@ func GetMerekController(c echo.Context) error {
 	})
 }
 
-func GetJenisController(c echo.Context) error {
+func GetMerekController(c echo.Context) error {
+	// 1. Take id from URL param
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		// return c.JSON(400, map[string]string{"error": "Invalid ID Format"})
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID format",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	// 2. Query to Database
+	var merek models.Merek // Single struct, NOT slice
+	result := configs.DB.First(&merek, "idmerek = ?", id)
+
+	// 3. Check whether the data already founded or not yet
+	// return c.JSON(200, car)
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Brand Not Founded",
+			Status:  true,
+			Data:    merek,
+		})
+	}
+
+	// 4. Return the result
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Successfully shows the Brand data",
+		Status:  true,
+		Data:    merek,
+	})
+}
+
+func GetTypesController(c echo.Context) error {
 	var jenis []models.Jenis
 
 	result := configs.DB.Find(&jenis)
@@ -390,6 +485,34 @@ func GetJenisController(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, models.BaseResponse{
 		Message: "Berhasil menampilkan data jenis",
+		Status:  true,
+		Data:    jenis,
+	})
+}
+
+func GetTypeController(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID format",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	var jenis models.Jenis
+	result := configs.DB.First(&jenis, "idjenis = ?", id)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Type Not Founded",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Successfully shows the Type data",
 		Status:  true,
 		Data:    jenis,
 	})
