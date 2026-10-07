@@ -19,12 +19,18 @@ func InitRoute(e *echo.Echo) {
 
 	e.Static("/", "frontend/views")
 
+	// Cars CRUD
 	e.POST("/api/cars", controllers.CreateCarsController)
 	e.GET("/api/cars", controllers.GetCarsController)    // List all cars
 	e.GET("/api/cars/:id", controllers.GetCarController) // For single car, outmostly supporting the update func
-	e.GET("/api/brands", controllers.GetMerekController)
-	e.GET("/api/types", controllers.GetJenisController)
-	e.GET("/api/status", controllers.GetStatusController)
 	e.PUT("/api/cars/:id", controllers.UpdateCarController)
 	e.DELETE("api/cars/:id", controllers.DeleteCarController)
+	// Brands CRUD
+	e.GET("/api/brands", controllers.GetMereksController)
+	e.GET("/api/brands/:id", controllers.GetMerekController)
+	// Types CRUD
+	e.GET("/api/types", controllers.GetTypesController)
+	e.GET("/api/types/:id", controllers.GetTypeController)
+	// Status CRUD
+	e.GET("/api/status", controllers.GetStatusController)
 }
