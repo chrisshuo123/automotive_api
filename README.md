@@ -15,7 +15,7 @@ This project mainly showcases my ability in creating Pointer APIs using Golang M
 - ✅ HTML FrontEnd API
 - ✅ RESTful API endpoints
 - ✅ Add images per vehicle API
-- ✅ Approval Workflow _(When a user Adds or update new data, the database need to be validated by admin before submitted to MySQL DB)_
+- ✅ Approval Workflow _(When a user Inserts new data, the database need to be validated through the Admin Panel before published to the main Car List index.html page)_
 
 **Currently Learning:**
 - 🔄 Update Feature in Postman API
@@ -76,6 +76,7 @@ http://localhost:8000/api/brands <br>
 http://localhost:8000/api/types <br>
 👉 **Pointer PUT Update Cars:** <br>
 http://localhost:8000/api/cars/_id_ <br>
+_(For the update API Instructions still WIP)_
 <br>
 **NOTE:** The aim of this Bonus session is to showcase my API Pointer Skill, when I undergo a Golang Certification on creating a minimum of 3 API Pointers.<br>
 <br>
