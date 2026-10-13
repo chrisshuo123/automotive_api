@@ -4,7 +4,7 @@ This project mainly showcases my ability in creating Pointer APIs using Golang M
 
 ## Future Release:
 - 3D Asset Vehicles per API (Starts from models, but soon can be playable in UNITY 3D. Please take Note: Only Lowpoly Assets) ⏹🚗🚘
-- Some want to make it into Laravel / PHP
+- **SOON:** Will be hosted via PHP using InfinityFree, with additional features like Python Graph Data Analysis 📊📈🔍
 
 ## 🚧 Learning Project: [Automotive API]
 
@@ -14,18 +14,24 @@ This project mainly showcases my ability in creating Pointer APIs using Golang M
 - ✅ Database migration & seeding
 - ✅ HTML FrontEnd API
 - ✅ RESTful API endpoints
+- ✅ Add images per vehicle API
+- ✅ Approval Workflow _(When a user Adds or update new data, the database need to be validated by admin before submitted to MySQL DB)_
 
 **Currently Learning:**
 - 🔄 Update Feature in Postman API
 - 🔄 API documentation
 - 🔄 Golang Approval Workflow
 
+**Features in progress:**
+- Search & filter for index.html car list
+- Bulletin page for index.html car list
+- Graph page (uses Python)
+- Car Brand & Car Type CRUD in addCar.html Admin Panel
+
 **Future Improvement:**
-- 💡 Add images per vehicle API
-- 💡 Add Approval Workflow _(When a user Adds or update new data, the database need to be validated by admin before submitted to MySQL DB)_
 - 💡 Add 3D Lowpoly Cars Model _(Why Lowpoly? Because We're a small budgetted team)_
 
-**Tech Stack:** Golang, MySQL, HTML, CSS, JS
+**Tech Stack:** Golang, MySQL, HTML, CSS, JS (For the Hosted Web using PHP Language)
 
 # Instructions
 In the VSCode IDE on Terminal _(low side of the screen)_, input this:
