@@ -30,15 +30,18 @@ export function handleAddCar(e) {
     createCar(formData)
         .then(apiData => {
             if(apiData.status) {
-                showMessage('Car Added Successfully!', 'success');
+                // showMessage('Car Added Successfully!', 'success');
+                alert('Car Added Successfully!', 'success');
                 document.getElementById('carForm').reset();
                 refreshCarList(); // Refresh the car list
             } else {
-                showMessage('Failed to Add Car: ' + apiData.message, 'error');
+                // showMessage('Failed to Add Car: ' + apiData.message, 'error');
+                alert('Failed to Add Car: ' + apiData.message, 'error');
             }
         })
         .catch(error => {
-            showMessage('Error Adding Car: ' + error.message, 'error');
+            // showMessage('Error Adding Car: ' + error.message, 'error');
+            alert('Error Adding Car: ' + error.message, 'error');
         });
 }
 
@@ -87,11 +90,13 @@ export function handleDeleteCar(e) {
         if(confirm('Are you sure you want to delete this car?')) {
             deleteCar(carId)
                 .then(() => {
-                    showMessage('Car Deleted Successfully!', 'success');
+                    // showMessage('Car Deleted Successfully!', 'success');
+                    alert('Car Deleted Successfully!', 'success');
                     refreshCarList();
                 })
                 .catch(error => {
-                    showMessage('Delete failed: ' + error.message, 'error');
+                    // showMessage('Delete failed: ' + error.message, 'error');
+                    alert('Delete failed: ' + error.message, 'error');
                 });
         }
     }
