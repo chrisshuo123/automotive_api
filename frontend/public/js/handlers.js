@@ -16,10 +16,10 @@ export function handleAddCar(e) {
     // };
     const formData = new FormData();
     formData.append('nama_mobil', document.getElementById('nama_mobil').value);
-    formData.append('idMerek_fk', document.getElementById('merek').value);
-    formData.append('idJenis_fk', document.getElementById('jenis').value);
+    formData.append('idmerek_fk', document.getElementById('merek').value);
+    formData.append('idjenis_fk', document.getElementById('jenis').value);
     formData.append('horse_power', document.getElementById('horse_power').value || 0);
-    formData.append('idStatus_fk', 1);
+    formData.append('idstatus_fk', 1);
     formData.append('image', document.getElementById('image_car').files[0]); // Actual File Object
 
     // DEBUG - lihat isi formData sebelum dikirim
@@ -55,14 +55,15 @@ export function handleUpdateCar(e) {
     // };
     const formData = new FormData();
     formData.append('nama_mobil', document.getElementById('edit_nama_mobil').value);
-    formData.append('idMerek_fk', document.getElementById('edit_merek').value);
-    formData.append('idJenis_fk', document.getElementById('edit_jenis').value);
+    formData.append('idmerek_fk', document.getElementById('edit_merek').value);
+    formData.append('idjenis_fk', document.getElementById('edit_jenis').value);
     formData.append('horse_power', document.getElementById('edit_horse_power').value);
-    formData.append('idStatus_fk', document.getElementById('edit_status').value);
+    formData.append('idstatus_fk', document.getElementById('edit_status').value);
     
     const imageFile = document.getElementById('edit_image_car').files[0];
     if (imageFile) {
-        formData.append('image', imageFile); // Only attach if user picked a new file
+        // formData.append('nama_foto', imageFile); // Only attach if user picked a new file
+        formData.append('image', imageFile); // Ubah nama_foto jadi image, agar sama dengan c.FormFile("image") di backend
     }
     
     // formData.append('imageCar', document.getElementById('edit_image_car').files[0]); // Actual File Object
@@ -71,10 +72,12 @@ export function handleUpdateCar(e) {
         .then(() => {
             closeEditModal();
             refreshCarList();
-            showMessage('Car Updated Successfully!', 'success');
+            // showMessage('Car Updated Successfully!', 'success');
+            alert('Car Updated Successfully!');
         })
         .catch(error => {
-            showMessage('Update failed: ' + error.message, 'error');
+            // showMessage('Update failed: ' + error.message, 'error');
+            alert('Update car failed: ' + error.message, 'error');
         })
 }
 

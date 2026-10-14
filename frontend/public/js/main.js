@@ -2,46 +2,56 @@ import { fetchBrands, fetchTypes, fetchStatus } from './api.js';
 import { populateSelect, refreshCarList } from './ui.js';
 import { setupModalListeners } from './modal.js';
 import { handleAddCar, handleUpdateCar, handleDeleteCar } from './handlers.js';
+import { cache } from './state.js';
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('DOM Fully Loaded!');
 
     // Setup Modal
     setupModalListeners();
 
-    // Load Initial Data
-    refreshCarList();
+    // --------- LOAD ALL DATA FIRST -----------
+    try {
+        const [brandsRes, typesRes, statusRes] = await Promise.all([
+            fetchBrands(),
+            fetchTypes(),
+            fetchStatus()
+        ]);
 
-    // Load Brands, Types, & Status for selects
-    fetchBrands()
-        .then(apiData => {
-            const brands = apiData.data || apiData;
-            populateSelect('merek', brands, 'merek', 'idMerek');
-            populateSelect('edit_merek', brands, 'merek', 'idMerek');
-        })
-        .catch(error => console.error('Brands error: ', error));
-    
-    fetchTypes()
-        .then(apiData => {
-            const types = apiData.data || apiData;
-            populateSelect('jenis', types, 'jenis', 'idJenis');
-            populateSelect('edit_jenis', types, 'jenis', 'idJenis');
-        })
-        .catch(error => console.error('Types Error: ', error));
+        cache.brands = brandsRes.data || brandsRes;
+        cache.types = typesRes.data || typesRes;
+        cache.status = statusRes.data || statusRes;
 
-    fetchStatus()
-        .then(apiData => {
-            const status = apiData.data || apiData;
-            // populateSelect('status', status, 'status', 'idStatus');
-            populateSelect('edit_status', status, 'status', 'idStatus');
-        })
-        .catch(error => console.error('Status Error: ', error));
+        console.log('✅ Cache ready: ', {
+            brands: cache.brands.length,
+            types: cache.types.length,
+            status: cache.status.length
+        });
+    } catch(err) {
+        console.error('❌ failed to load master data: ', err);
+        return;     // ← jangan lanjut kalau gagal
+    }
 
-    // EVENT LISTENERS
-    // Add a Car
-    document.getElementById('carForm').addEventListener('submit', handleAddCar);
-    // Update a Car (Edit)
-    document.getElementById('editCarForm').addEventListener('submit', handleUpdateCar);
-    // Delete a Car
+    // --------- POPULATE ALL SELECTS -----------
+    populateSelect('merek', cache.brands, 'namamerek', 'idmerek');
+    populateSelect('edit_merek', cache.brands, 'namamerek', 'idmerek');
+    populateSelect('jenis', cache.types, 'namajenis', 'idjenis');
+    populateSelect('edit_jenis', cache.types, 'namajenis', 'idjenis');
+    populateSelect('status', cache.status, 'namastatus', 'idstatus');
+    populateSelect('edit_status', cache.status, 'namastatus', 'idstatus');
+
+    // --------- LOAD CAR LIST -----------
+    await refreshCarList();
+    // refreshCarList();
+
+    // --------- EVENT LISTENERS ----------
+    const carForm = document.getElementById('carForm');
+    if (carForm) carForm.addEventListener('submit', handleAddCar);
+
+    const editCarForm = document.getElementById('editCarForm');
+    if (editCarForm) editCarForm.addEventListener('submit', handleUpdateCar);
+
     document.addEventListener('click', handleDeleteCar);
+
+    console.log('✅ Init complete');
 })

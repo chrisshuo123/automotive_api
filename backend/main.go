@@ -18,7 +18,7 @@ func main() {
 	db.Config.NamingStrategy = schema.NamingStrategy{
 		TablePrefix:   "",
 		SingularTable: true, // <-- This is the key setting
-		NoLowerCase:   true,
+		// NoLowerCase:   true,  // <-- Di disable, biar GORM pakai huruf kecil (postgree case sensitive)
 	}
 
 	// Optional: Auto-migrate models (if needed)

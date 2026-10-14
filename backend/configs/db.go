@@ -4,22 +4,24 @@ import (
 	"automotiveApi/models"
 	"log"
 
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres" // ← ganti dari mysql
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
 func InitDatabase() *gorm.DB {
-	dsn := "root:root@tcp(127.0.0.1:3306)/automotive_api?charset=utf8mb4&parseTime=True&loc=Local"
+	// dsn := "root:root@tcp(127.0.0.1:3306)/automotive_api?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "host=127.0.0.1 user=postgres password=root dbname=automotive_api port=5432 sslmode=disable search_path=automotive_api,public"
 	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
 	if err != nil {
 		//panic(err)
 		log.Fatal("failed to connect database", err)
 	}
+
 	return DB
 }
 

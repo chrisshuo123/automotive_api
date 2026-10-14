@@ -1,23 +1,34 @@
 package models
 
 type Cars struct {
-	CarsID     uint   `gorm:"primaryKey;column:idCars" json:"idCars" form:"idCars"`
+	CarsID     uint   `gorm:"primaryKey;column:idcars" json:"idcars" form:"idcars"`
 	NamaMobil  string `gorm:"not null;column:nama_mobil" json:"nama_mobil" form:"nama_mobil"`
-	MerekID    *uint  `gorm:"column:idMerek_fk" json:"idMerek_fk" form:"idMerek_fk"`
-	JenisID    *uint  `gorm:"column:idJenis_fk" json:"idJenis_fk" form:"idJenis_fk"`
+	MerekID    *uint  `gorm:"column:idmerek_fk" json:"idmerek_fk" form:"idmerek_fk"`
+	JenisID    *uint  `gorm:"column:idjenis_fk" json:"idjenis_fk" form:"idjenis_fk"`
 	HorsePower uint   `gorm:"column:horse_power" json:"horse_power" form:"horse_power"`
-	StatusID   *uint  `gorm:"column:idStatus_fk" json:"idStatus_fk" form:"idStatus_fk"`
-	ImageCar   string `gorm:"column:imageCar" json:"imageCar" form:"imageCar"`
+	StatusID   *uint  `gorm:"column:idstatus_fk" json:"idstatus_fk" form:"idstatus_fk"`
+	ImageCar   string `gorm:"column:nama_foto" json:"nama_foto" form:"nama_foto"`
 
 	// Relationships
-	Merek  *Merek  `gorm:"foreignKey:idMerek_fk;references:idMerek" json:"merek"`
-	Jenis  *Jenis  `gorm:"foreignKey:idJenis_fk;references:idJenis" json:"jenis"`
-	Status *Status `gorm:"foreignKey:idStatus_fk;references:idStatus" json:"status"`
+	Merek  *Merek  `gorm:"foreignKey:idmerek_fk;references:idmerek" json:"merek"`
+	Jenis  *Jenis  `gorm:"foreignKey:idjenis_fk;references:idjenis" json:"jenis"`
+	Status *Status `gorm:"foreignKey:idstatus_fk;references:idstatus" json:"status"`
 }
 
 type Merek struct {
-	ID   uint   `gorm:"column:idMerek;primaryKey" json:"idMerek" form:"id"`
-	Nama string `gorm:"column:merek" json:"merek" form:"merek"`
+	ID   uint   `gorm:"column:idmerek;primaryKey" json:"idmerek" form:"id"`
+	Nama string `gorm:"column:namamerek" json:"namamerek" form:"namamerek"`
+}
+
+// GORM to find Postgree's Tablename:
+func (Cars) TableName() string {
+	return "cars"
+}
+func (Jenis) TableName() string {
+	return "jenis"
+}
+func (Status) TableName() string {
+	return "status"
 }
 
 /* GORM Error Mitigation on Reading 'Merek' table as 'Mereks' */
@@ -26,11 +37,11 @@ func (Merek) TableName() string {
 }
 
 type Jenis struct {
-	ID   uint   `gorm:"column:idJenis;primaryKey" json:"idJenis" form:"id"`
-	Nama string `gorm:"column:jenis" json:"jenis" form:"jenis"`
+	ID   uint   `gorm:"column:idjenis;primaryKey" json:"idjenis" form:"id"`
+	Nama string `gorm:"column:namajenis" json:"namajenis" form:"namajenis"`
 }
 
 type Status struct {
-	ID   uint   `gorm:"column:idStatus;primaryKey" json:"idStatus" form:"id"`
-	Nama string `gorm:"column:status" json:"status" form:"status"`
+	ID   uint   `gorm:"column:idstatus;primaryKey" json:"idstatus" form:"id"`
+	Nama string `gorm:"column:namastatus" json:"namastatus" form:"namastatus"`
 }

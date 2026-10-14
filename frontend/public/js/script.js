@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusFilter = document.getElementById("statusFilter");
     const clearBtn = document.getElementById("clearBtn");
 
-    console.log('DOM loaded - initializing filters'); // Debug log
+    // console.log('DOM loaded - initializing filters'); // Debug log
 
     function filterData() {
         console.log('=== filterData called ==='); // Debug log
@@ -162,11 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners
     if (searchInput) {
-        console.log('Search input found - adding listener'); // Debug log
+        // console.log('Search input found - adding listener'); // Debug log
         // 'input' event triggers on every keystroke (including backspace/delete)
         
         searchInput.addEventListener('input', function(e) {
-            console.log('Input event triggered.  Current value: ', `"${this.value}"`);
+            // console.log('Input event triggered.  Current value: ', `"${this.value}"`);
             filterData();
         }); // Real-time search on input
 
@@ -174,43 +174,43 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('keypress', function(e) {
             if(e.key === 'enter') {
                 e.preventDefault();
-                console.log('Enter key pressed. Current value: ', `"${this.value}"`);
+                // console.log('Enter key pressed. Current value: ', `"${this.value}"`);
                 filterData();
             }
         });
 
         searchInput.addEventListener('search', function(e) {
-            console.log('Search event triggered (x button clicked).  Current value: ', `"${this.value}"`);
+            // console.log('Search event triggered (x button clicked).  Current value: ', `"${this.value}"`);
             if(this.value === '') {
                 filterData();
             }
         });
     } else {
-        console.log('Search input NOT found'); // Debug log
+        // console.log('Search input NOT found'); // Debug log
     }
     
     if (statusFilter) {
-        console.log('Status filter found - adding listener'); // Debug log
+        // console.log('Status filter found - adding listener'); // Debug log
         statusFilter.addEventListener('change', function(e) {
             console.log('Status changed to: ', this.value);
             filterData();
         });
     } else {
-        console.log('Status filter NOT found'); // Debug log
+        // console.log('Status filter NOT found'); // Debug log
     }
 
     // Clear button functionality
     if (clearBtn) {
-        console.log('Clear button found - adding listener');
+        // console.log('Clear button found - adding listener');
         clearBtn.addEventListener('click', function() {
             searchInput.value = '';
             statusFilter.value = ''; // or 'all' depending on your HTML
-            console.log('Filters cleared. Search value: ', `"${searchInput.value}"`);
+            // console.log('Filters cleared. Search value: ', `"${searchInput.value}"`);
             filterData(); // Trigger filter to show all cars
         });
     }
 
     // Initial Load - use refreshCarList to fetch and flatten data
-    console.log('Calling refreshCarList for initial load'); // Debug log
+    // console.log('Calling refreshCarList for initial load'); // Debug log
     refreshCarList();
 });

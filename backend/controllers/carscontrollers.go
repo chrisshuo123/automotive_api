@@ -3,6 +3,8 @@ package controllers
 import (
 	"automotiveApi/configs"
 	"automotiveApi/models"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -11,10 +13,85 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
+
+// Base folder where car images are saved and served from.
+// Relative to the Go process's working directory.
+var carImageDir string
+
+func init() {
+	dir := os.Getenv("CAR_IMAGE_DIR")
+	if dir == "" {
+		// Fallback for local dev - adjust to taste
+		dir = "../frontend/public/img"
+	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+	carImageDir = abs
+	fmt.Println("Car image dir: ", carImageDir)
+}
+
+func saveUploadedImageWithName(fileHeader *multipart.FileHeader, fileName string) error {
+	src, err := fileHeader.Open()
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	// Cari root project dari working directory saat ini
+	wd, _ := os.Getwd()
+	// File Path Upload Directory
+	uploadDir := filepath.Join(wd, "..", "frontend", "public", "img")
+
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return fmt.Errorf("Failed to create upload dir: %w", err)
+	}
+
+	dstPath := filepath.Join(uploadDir, fileName)
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
+}
+
+// deleteCarImage removes a previously saved car image from disk.
+// Returns nil if the file is already gone (idempotent)
+func deleteCarImage(fileName string) error {
+	if fileName == "" {
+		return nil
+	}
+
+	// Safety: only allow a bare filename, no path seperators or ".."
+	clean := filepath.Clean(fileName)
+	if clean != fileName || strings.ContainsAny(fileName, `/\`) || fileName == "." || fileName == ".." {
+		return fmt.Errorf("refusing to delete suspicious filename: %q", fileName)
+	}
+
+	fullPath := filepath.Join(carImageDir, clean)
+
+	abs, _ := filepath.Abs(fullPath)
+	fmt.Println("[deletecarImage] attempting to remove: ", abs)
+
+	if err := os.Remove(fullPath); err != nil {
+		fmt.Println("[deleteCarImage] os.Remove error: ", err)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	fmt.Println("[deleteCarImage] removed OK")
+	return nil
+}
 
 func CreateCarsController(c echo.Context) error {
 	var carsRequest models.Cars
@@ -25,19 +102,19 @@ func CreateCarsController(c echo.Context) error {
 		carsRequest.HorsePower = uint(hp)
 	}
 
-	if v := c.FormValue("idMerek_fk"); v != "" {
+	if v := c.FormValue("idmerek_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.MerekID = &uid
 		}
 	}
-	if v := c.FormValue("idJenis_fk"); v != "" {
+	if v := c.FormValue("idjenis_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.JenisID = &uid
 		}
 	}
-	if v := c.FormValue("idStatus_fk"); v != "" {
+	if v := c.FormValue("idstatus_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			carsRequest.StatusID = &uid
@@ -73,13 +150,47 @@ func CreateCarsController(c echo.Context) error {
 		}
 	}
 
+	// ===== DEBUG: dump every multipart key the server received =====
+	if form, err := c.MultipartForm(); err == nil {
+		for k, v := range form.Value {
+			fmt.Printf("[CREATE] value key: %q = %v\n", k, v)
+		}
+		for k, v := range form.File {
+			for _, fh := range v {
+				fmt.Printf("[CREATE] file key: %q => filename=%q size=%d\n", k, fh.Filename, fh.Size)
+			}
+		}
+	} else {
+		fmt.Println("[CREATE] MultipartForm err: ", err)
+	}
+	// ===============================================================
+
 	// Optional image upload
 	fileHeader, err := c.FormFile("image")
 	fmt.Println("FormFile err: ", err)
 	if err == nil {
 		fmt.Println("Got file: ", fileHeader.Filename)
-		fileName, err := saveUploadedImage(fileHeader)
-		if err != nil {
+
+		// Ambil extension dari file asli (mis. ".jpg")
+		ext := filepath.Ext(fileHeader.Filename)
+
+		// Generate 7 byte random: "car_123124124qsafwr" jadi 14 karakter hex
+		b := make([]byte, 7) // 7 byte x 2 = 14 char hex
+		if _, err := rand.Read(b); err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: "Failed to generate random name",
+				Status:  false,
+			})
+		}
+
+		// Gabungkan: car_ + hex + ext
+		fileName := "car_" + hex.EncodeToString(b) + ext
+		// Hasil: car_6a9bdbc37fbfb.jpg
+
+		fmt.Println("Generated filename: ", fileName)
+
+		// Simpan file dengan nama baru
+		if err := saveUploadedImageWithName(fileHeader, fileName); err != nil {
 			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
 				Message: err.Error(),
 				Status:  false,
@@ -112,6 +223,7 @@ func CreateCarsController(c echo.Context) error {
 }
 
 func UpdateCarController(c echo.Context) error {
+	fmt.Println("[UPDATE] handler entered, id = ", c.Param("id"))
 	// Get ID from URL
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -136,46 +248,120 @@ func UpdateCarController(c echo.Context) error {
 			car.HorsePower = uint(hp)
 		}
 	}
-	if v := c.FormValue("idMerek_fk"); v != "" {
+	if v := c.FormValue("idmerek_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.MerekID = &uid
 		}
 	}
-	if v := c.FormValue("idJenis_fk"); v != "" {
+	if v := c.FormValue("idjenis_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.JenisID = &uid
 		}
 	}
-	if v := c.FormValue("idStatus_fk"); v != "" {
+	if v := c.FormValue("idstatus_fk"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			uid := uint(id)
 			car.StatusID = &uid
 		}
 	}
 
+	var oldFileName string
+	newFileUploaded := false
+
 	// Only replace the image if a new file was actually sent
-	fileHeader, err := c.FormFile("image")
+	fileHeader, err := c.FormFile("image") // "image" is actually "nama_foto", taken from handlers.js
+	fmt.Println("[UPDATE] FormFile err: ", err)
+
 	if err == nil {
-		fileName, err := saveUploadedImage(fileHeader)
-		if err != nil {
+		fmt.Println("Got file: ", fileHeader.Filename)
+
+		// Remember the old filename BEFORE we overwrite it
+		oldFileName = car.ImageCar
+
+		// Ambil extension dari file asli (misal: ".jpg .png, dkk...")
+		ext := filepath.Ext(fileHeader.Filename)
+
+		// Generate 7 byte random: "car_1234123412qwqrs" jadi 14 karakter hex
+		b := make([]byte, 7) // 7 byte x 2 = 14 char hex
+		if _, err := rand.Read(b); err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: "Failed to generate random name",
+				Status:  false,
+			})
+		}
+
+		// Gabungkan: car_ + hex + ext
+		fileName := "car_" + hex.EncodeToString(b) + ext
+		// Hasil: car_6a9bdbc37fbfb.jpg
+
+		fmt.Println("Generated filename: ", fileName)
+
+		// Simpan file dengan nama baru
+		if err := saveUploadedImageWithName(fileHeader, fileName); err != nil {
 			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
 				Message: err.Error(),
 				Status:  false,
 			})
 		}
+
+		// Point the row at the new file
 		car.ImageCar = fileName
+		newFileUploaded = true
+
+		// Save to DB
+		if err := configs.DB.Save(&car).Error; err != nil {
+			if newFileUploaded {
+				// Rollback the new file so we don't leave an orphan
+				_ = deleteCarImage(fileName) // roll back the new file
+				car.ImageCar = oldFileName   // (optional) restore in-memory value
+			}
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: err.Error(), Status: false,
+			})
+		}
+
+		if newFileUploaded && oldFileName != "" {
+			fmt.Println("[UPDATE] deleting old file: ", oldFileName)
+			// DB save succeeded -> now it's safe to delete the old file
+			if err := deleteCarImage(oldFileName); err != nil {
+				// Non-fatal: Log it, but don't fail the request
+				fmt.Printf("warning: failed to delete old image %q: %v\n", oldFileName, err)
+			}
+		}
+	} else {
+		fmt.Println("[UPDATE] no new file uploaded - reason: ", err)
+		// No new file - just save any other field changes
+
+		form, mErr := c.MultipartForm()
+		fmt.Println("[UPDATE] MultipartForm err: ", mErr)
+		if mErr == nil {
+			fmt.Println("[UPDATE] --- form.Value keys ---")
+			for k, v := range form.Value {
+				fmt.Printf("[UPDATE] value key: %q = %v\n", k, v)
+			}
+			fmt.Println("[UPDATE] --- form.File keys ---")
+			for k, v := range form.File {
+				for _, fh := range v {
+					fmt.Printf("[UPDATE] file key: %q -> filename=%q size=%d\n", k, fh.Filename, fh.Size)
+				}
+			}
+			if len(form.File) == 0 {
+				fmt.Println("[UPDATE]	(no file parts at all)")
+			}
+		} else {
+			fmt.Println("[UPDATE] MultipartForm err: ", mErr)
+		}
+
+		if err := configs.DB.Save(&car).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, models.BaseResponse{
+				Message: err.Error(), Status: false,
+			})
+		}
 	}
 
-	// 3. Save Changes
-	if err := configs.DB.Save(&car).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, models.BaseResponse{
-			Message: err.Error(), Status: false,
-		})
-	}
-
-	// 4. Force Reload with relationships
+	// Force Reload with relationships
 	var updatedCar models.Cars
 	if err := configs.DB.
 		Preload("Merek").
@@ -225,6 +411,10 @@ func saveUploadedImage(fileHeader *multipart.FileHeader) (string, error) {
 }
 
 func GetCarsController(c echo.Context) error {
+	var count int64
+	configs.DB.Table("cars").Count(&count)
+	fmt.Println("Total rows in cars table: ", count)
+
 	var cars []models.Cars
 
 	// Set Response Header
@@ -237,13 +427,13 @@ func GetCarsController(c echo.Context) error {
 	// First load cars with relationships
 	result := configs.DB.
 		Preload("Merek", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idMerek, merek") // Only load necessary fields
+			return db.Select("idmerek, namamerek") // Only load necessary fields
 		}).
 		Preload("Jenis", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idJenis, jenis")
+			return db.Select("idjenis, namajenis")
 		}).
 		Preload("Status", func(db *gorm.DB) *gorm.DB {
-			return db.Select("idStatus, status")
+			return db.Select("idstatus, namastatus")
 		}).
 		Find(&cars)
 		//First(&cars, id)
@@ -319,6 +509,8 @@ func GetCarController(c echo.Context) error {
 		})
 	}
 
+	log.Printf("🔵 GetCarController: id=%d", id)
+
 	// var car []models.Cars // Single record, not slice
 	var car models.Cars // Single struct, NOT slice
 
@@ -329,11 +521,18 @@ func GetCarController(c echo.Context) error {
 		Preload("Merek").
 		Preload("Jenis").
 		Preload("Status").
-		First(&car, id) // Use First() for single records
+		Where("idcars = ?", id).
+		First(&car) // Use First() for single records
+
+	log.Printf("🔵 Query error: %v", result.Error)
+	log.Printf("🔵 Rows affected: %d", result.RowsAffected)
+	log.Printf("🔵 Car: %+v", car)
 
 	// result := query.Find(&cars)
 
 	if result.Error != nil {
+		log.Println("GetCar error: ", result.Error)
+		log.Println("Looking for idcars: ", id)
 		// return c.JSON(404, map[string]string{"error": "Car not found"})
 		return c.JSON(http.StatusNotFound, models.BaseResponse{
 			Message: "Cars not found",
@@ -349,7 +548,7 @@ func GetCarController(c echo.Context) error {
 	})
 }
 
-func GetMerekController(c echo.Context) error {
+func GetMereksController(c echo.Context) error {
 	var merek []models.Merek
 
 	// Set Response Header
@@ -375,7 +574,41 @@ func GetMerekController(c echo.Context) error {
 	})
 }
 
-func GetJenisController(c echo.Context) error {
+func GetMerekController(c echo.Context) error {
+	// 1. Take id from URL param
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		// return c.JSON(400, map[string]string{"error": "Invalid ID Format"})
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID format",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	// 2. Query to Database
+	var merek models.Merek // Single struct, NOT slice
+	result := configs.DB.First(&merek, "idmerek = ?", id)
+
+	// 3. Check whether the data already founded or not yet
+	// return c.JSON(200, car)
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Brand Not Founded",
+			Status:  true,
+			Data:    merek,
+		})
+	}
+
+	// 4. Return the result
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Successfully shows the Brand data",
+		Status:  true,
+		Data:    merek,
+	})
+}
+
+func GetTypesController(c echo.Context) error {
 	var jenis []models.Jenis
 
 	result := configs.DB.Find(&jenis)
@@ -390,6 +623,34 @@ func GetJenisController(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, models.BaseResponse{
 		Message: "Berhasil menampilkan data jenis",
+		Status:  true,
+		Data:    jenis,
+	})
+}
+
+func GetTypeController(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, models.BaseResponse{
+			Message: "Invalid ID format",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	var jenis models.Jenis
+	result := configs.DB.First(&jenis, "idjenis = ?", id)
+
+	if result.Error != nil {
+		return c.JSON(http.StatusNotFound, models.BaseResponse{
+			Message: "Type Not Founded",
+			Status:  false,
+			Data:    nil,
+		})
+	}
+
+	return c.JSON(http.StatusOK, models.BaseResponse{
+		Message: "Successfully shows the Type data",
 		Status:  true,
 		Data:    jenis,
 	})
@@ -424,6 +685,16 @@ func DeleteCarController(c echo.Context) error {
 		})
 	}
 
+	// Load the car first to know the image filename
+	var car models.Cars
+	if err := configs.DB.First(&car, id).Error; err != nil {
+		return c.JSON(404, map[string]interface{}{
+			"status": false,
+			"error":  "Car not found",
+		})
+	}
+
+	// Delete DB row
 	result := configs.DB.Delete(&models.Cars{}, id)
 	if result.Error != nil {
 		return c.JSON(500, map[string]interface{}{
@@ -432,12 +703,21 @@ func DeleteCarController(c echo.Context) error {
 		})
 	}
 
-	if result.RowsAffected == 0 {
-		return c.JSON(404, map[string]interface{}{
-			"status": false,
-			"error":  "Car not found",
-		})
+	// Delete the image file (non-fatal if it fails)
+	if car.ImageCar != "" {
+		if err := deleteCarImage(car.ImageCar); err != nil {
+			fmt.Printf("Warning: failed to delete image %q: %v\n", car.ImageCar, err)
+		} else {
+			fmt.Printf("Image %s deleted successfully \n", car.ImageCar)
+		}
 	}
+
+	// if result.RowsAffected == 0 {
+	// 	return c.JSON(404, map[string]interface{}{
+	// 		"status": false,
+	// 		"error":  "Car not found",
+	// 	})
+	// }
 
 	return c.JSON(200, map[string]interface{}{
 		"status":  true,

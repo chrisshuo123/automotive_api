@@ -30,12 +30,12 @@ export async function loadCarForEdit(id) {
         console.log('Extracted car: ', car);
         // console.log('Car Fields: ', Object.keys(car));
 
-        document.getElementById('edit_id').value = car.idCars;
+        document.getElementById('edit_id').value = car.idcars;
         document.getElementById('edit_nama_mobil').value = car.nama_mobil;
-        document.getElementById('edit_merek').value = car.idMerek_fk;
-        document.getElementById('edit_jenis').value = car.idJenis_fk;
+        document.getElementById('edit_merek').value = car.idmerek_fk;
+        document.getElementById('edit_jenis').value = car.idjenis_fk;
         document.getElementById('edit_horse_power').value = car.horse_power;
-        document.getElementById('edit_status').value = car.idStatus_fk;
+        document.getElementById('edit_status').value = car.idstatus_fk;
         openEditModal();
     } catch(error) {
         console.error('Edit Error: ', error);
@@ -47,11 +47,11 @@ export async function loadCarForEdit(id) {
 function flattenCarData(car) {
     const flattened = {
         ...car,
-        brandDisplay: car.merek?.merek || (car.idMerek_fk ? `[ID: ${car.idMerek_fk}]` : 'Not Specified'),
-        typeDisplay: car.jenis?.jenis ||  (car.idJenis_fk ? `[ID: ${car.idJenis_fk}]` : 'Not Specified'),
-        statusDisplay: car.status?.status || (car.idStatus_fk ? `[ID: ${car.idStatus_fk}]` : 'Not Specified')
+        brandDisplay: car.merek?.namamerek || (car.idmerek_fk ? `[ID: ${car.idmerek_fk}]` : 'Not Specified'),
+        typeDisplay: car.jenis?.namajenis ||  (car.idjenis_fk ? `[ID: ${car.idjenis_fk}]` : 'Not Specified'),
+        statusDisplay: car.status?.namastatus || (car.idstatus_fk ? `[ID: ${car.idstatus_fk}]` : 'Not Specified')
     };
-    console.log('Flattened car: ', flattened); // Debug log
+    // console.log('Flattened car: ', flattened); // Debug log
     return flattened;
 }
 
@@ -74,13 +74,13 @@ export function renderCarList(cars) {
 
     cars.forEach(car => {
         // Use the flattened properties for dropdowns that use FKs
-        const brandDisplay = car.brandDisplay || car.merek?.merek || (car.idMerek_fk ? `[ID: ${car.idMerek_fk}]` : 'Not Specified');
+        const brandDisplay = car.brandDisplay || car.merek?.namamerek || (car.idmerek_fk ? `[ID: ${car.idmerek_fk}]` : 'Not Specified');
 
-        const typeDisplay = car.typeDisplay || car.jenis?.jenis ||  (car.idJenis_fk ? `[ID: ${car.idJenis_fk}]` : 'Not Specified');
+        const typeDisplay = car.typeDisplay || car.jenis?.namajenis ||  (car.idjenis_fk ? `[ID: ${car.idjenis_fk}]` : 'Not Specified');
 
-        const statusDisplay = car.statusDisplay || car.status?.status || (car.idStatus_fk ? `[ID: ${car.idStatus_fk}]` : 'Not Specified');
+        const statusDisplay = car.statusDisplay || car.status?.namastatus || (car.idstatus_fk ? `[ID: ${car.idstatus_fk}]` : 'Not Specified');
 
-        console.log('Rendering car: ', car.nama_mobil, 'Status: ', statusDisplay); // Debug log
+        // console.log('Rendering car: ', car.nama_mobil, 'Status: ', statusDisplay); // Debug log
 
         // Determine status color
         let statusColor = 'yellow'; // default
@@ -102,13 +102,13 @@ export function renderCarList(cars) {
                     <p><b>Status: </b><br><span style="background-color:${statusColor}; color: ${statusColor === 'yellow' ? 'black' : 'white'}; padding: 5px; border-radius: 5px;">${statusDisplay}</span></p>
                     <!-- This is for Edit Button in Panel Update Menu -->
                     <div class="flex-crud-button">
-                        <button class="edit-btn" data-id="${car.idCars}">Edit</button>
-                        <button class="delete-btn" data-id="${car.idCars}">Delete</button>
+                        <button class="edit-btn" data-id="${car.idcars}">Edit</button>
+                        <button class="delete-btn" data-id="${car.idcars}">Delete</button>
                     </div>
                 </div>
                 <div>
                     <!-- <img src="../public/img/yaris.jpg" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;"> -->
-                    <img src="../public/img/${car.imageCar}" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;">
+                    <img src="../public/img/${car.nama_foto}" style="width: 75%; max-width: 800px; height: auto; margin-left: 150px;">
                 </div>
             </div>
         `;
@@ -123,10 +123,26 @@ export function renderCarList(cars) {
 
 export function populateSelect(selectId, items, labelKey, valueKey, defaultText = 'Select an option') {
     const select = document.getElementById(selectId);
+
+    // Guard: kalau select tidak ada di DOM, jangan crash
+    if (!select) {
+        console.warn(`⚠️ populateSelect: #${selectId} not found in DOM`);
+        return
+    }
+
+    // Guard: kalau items bukan array
+    if (!Array.isArray(items)) {
+        console.warn(`⚠️ populateSelect: items for #${selectId} is not an array`);
+        return;
+    }
+
+    // Clear + Populate
     select.innerHTML = `<option value="">${defaultText}</option>`;
     items.forEach(item => {
         select.add(new Option(item[labelKey], item[valueKey]));
     });
+
+    console.log(`✅ #${selectId} populated with ${items.length} items`);
 }
 
 export function refreshCarList() {

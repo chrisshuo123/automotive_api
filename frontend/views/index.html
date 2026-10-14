@@ -45,7 +45,7 @@
                 }
 
                 // Filter: Hanya tampilkan cars dengan status "approved" (idStatus_fk = 2)
-                const approvedCars = data.data.filter(car => car.idStatus_fk === 2);
+                const approvedCars = data.data.filter(car => car.idstatus_fk === 2);
 
                 if(approvedCars.length === 0) {
                     carList.innerHTML = '<div class="no-cars">No approved cars found.</div>'
@@ -61,9 +61,9 @@
                         <h2>${car.nama_mobil}</h2>
                         <img src="../public/img/yaris.jpg" style="width: 100%; max-width: 800px; height: auto;">
                         <div class="car-details">
-                            <p><b>Brand: </b>${car.merek?.merek || 'Not Specified'}</p>
-                            <p><b>Jenis: </b>${car.jenis?.jenis  || 'Not Specified'}</p>
-                            <p><b>Horse Power: </b>${car.horse_power  || 'N/A'} CC</p>
+                            <p><b>Brand: </b>${car.merek?.namamerek || 'Not Specified'}</p>
+                            <p><b>Jenis: </b>${car.jenis?.namajenis  || 'Not Specified'}</p>
+                            <p><b>Horse Power: </b>${car.horse_power  || 'N/A'} HP</p>
                         </div>
                     `; // revised merek.merek and jenis.jenis, by adding each with '?'
                     carList.appendChild(carCard);
