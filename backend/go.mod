@@ -3,7 +3,6 @@ module automotiveApi
 go 1.25.0
 
 require (
-	github.com/0x6flab/namegenerator v1.4.0
 	github.com/labstack/echo/v4 v4.13.4
 	gorm.io/driver/postgres v1.6.3
 	gorm.io/gorm v1.31.2
