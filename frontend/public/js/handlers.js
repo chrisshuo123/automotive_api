@@ -62,7 +62,8 @@ export function handleUpdateCar(e) {
     
     const imageFile = document.getElementById('edit_image_car').files[0];
     if (imageFile) {
-        formData.append('nama_foto', imageFile); // Only attach if user picked a new file
+        // formData.append('nama_foto', imageFile); // Only attach if user picked a new file
+        formData.append('image', imageFile); // Ubah nama_foto jadi image, agar sama dengan c.FormFile("image") di backend
     }
     
     // formData.append('imageCar', document.getElementById('edit_image_car').files[0]); // Actual File Object
@@ -71,10 +72,12 @@ export function handleUpdateCar(e) {
         .then(() => {
             closeEditModal();
             refreshCarList();
-            showMessage('Car Updated Successfully!', 'success');
+            // showMessage('Car Updated Successfully!', 'success');
+            alert('Car Updated Successfully!');
         })
         .catch(error => {
-            showMessage('Update failed: ' + error.message, 'error');
+            // showMessage('Update failed: ' + error.message, 'error');
+            alert('Update car failed: ' + error.message, 'error');
         })
 }
 
